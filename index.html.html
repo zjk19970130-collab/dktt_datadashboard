@@ -1,0 +1,981 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Data Dashboard</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; margin: 16px; background: #fff; color: #111; }
+    .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin-bottom: 12px; }
+    .field { display: flex; flex-direction: column; gap: 6px; min-width: 160px; }
+    label { font-size: 12px; color: #444; }
+    select, input { padding: 8px; font-size: 13px; border: 1px solid #ddd; border-radius: 8px; background: #fff; box-sizing: border-box; }
+    button { padding: 8px 10px; font-size: 13px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; cursor: pointer; }
+    button:hover { background: #f3f3f3; }
+
+    .sep { height: 1px; background: #eee; margin: 10px 0; }
+
+    .table-wrap { overflow: auto; border: 1px solid #eee; border-radius: 10px; }
+    table { border-collapse: collapse; width: 100%; min-width: 1120px; table-layout: fixed; }
+    th, td { padding: 10px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+    thead th { position: sticky; top: 0; background: #fafafa; z-index: 10; text-align: center; }
+    tbody td { text-align: center; line-height: 1.35; }
+
+    /* Numeric alignment: keep column position, align digits by right-most place */
+    .numCell { text-align: center; }
+    .numWrap {
+      display: inline-block;
+      min-width: 12ch;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum" 1;
+      white-space: nowrap;
+      transform: translateX(-2ch);
+    }
+    .modalNum {
+      display: inline-block;
+      min-width: 10ch;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum" 1;
+      white-space: nowrap;
+    }
+
+    .muted { color: #666; font-size: 12px; }
+    .right { text-align: right; }
+    .btn-link {
+      border: none; background: transparent; padding: 0; color: #0b66c3; cursor: pointer; text-decoration: underline;
+      font-size: 13px;
+    }
+
+    .detail-card { padding: 10px; border: 1px solid #eee; border-radius: 10px; background: #fff; }
+    .pill {
+      display:inline-block; padding: 2px 8px; border-radius: 999px; background: #f5f7ff;
+      border: 1px solid #e6e9ff; font-size: 12px; color: #2b3b8f; margin-right: 6px; margin-bottom: 6px;
+    }
+    .owner-row-grid {
+      display: grid;
+      grid-template-columns: 320fr repeat(5, 160fr) 220fr;
+      align-items: center;
+      column-gap: 0;
+      width: 100%;
+    }
+    .owner-metric {
+      text-align: center;
+    }
+    .owner-metric .metric-num {
+      display: inline-block;
+      min-width: 12ch;
+      text-align: right;
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum" 1;
+      white-space: nowrap;
+      color: #111;
+      transform: translateX(-2ch);
+    }
+    /* Product module alternating backgrounds */
+    .module-a td { background: #ffffff; }
+    .module-b td { background: #fafcff; }
+    .product-cell-inner {
+      width: 290px;
+      margin: 0 auto;
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    .chipbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .chip {
+      padding: 6px 10px;
+      border: 1px solid #ddd;
+      border-radius: 999px;
+      background: #fff;
+      font-size: 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .chip:hover { background: #f3f3f3; }
+    .chip.active { border-color: #0b66c3; background: #eef6ff; color: #0b66c3; }
+    .product-option-list {
+      width: 100%;
+      min-width: 360px;
+      min-height: 140px;
+      max-height: 220px;
+      overflow: auto;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fff;
+      padding: 4px;
+      box-sizing: border-box;
+    }
+    .product-option-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 12px;
+    }
+    .product-option-item:hover { background: #f6f8fa; }
+    .product-option-item input { margin: 0; flex: 0 0 auto; }
+    .product-filter-field { min-width: 380px; width: 380px; flex: 0 0 380px; }
+    .product-picker-row { display:flex; gap:8px; align-items:center; width: 100%; }
+    .product-selected-display {
+      width: 100%;
+      max-width: 100%;
+      height: 34px;
+      line-height: 34px;
+      padding: 0 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 13px;
+      color: #222;
+    }
+    .product-picker-btn { white-space: nowrap; }
+    .popover {
+      position: fixed;
+      display: none;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+      padding: 10px;
+      z-index: 6000; /* above sticky header, below modals */
+    }
+    .popover-header { display:flex; justify-content: space-between; align-items:center; gap:10px; margin-bottom: 8px; }
+    .popover-title { font-weight: 700; font-size: 13px; }
+
+    .textarea {
+      width: 100%;
+      min-height: 160px;
+      resize: vertical;
+      padding: 10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.35;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      background: #fff;
+    }
+    .msg { font-size: 12px; color: #666; margin-top: 6px; }
+    .msg.error { color: #b00020; }
+
+    /* Header sorting arrows (always visible) */
+    .headerSort { cursor: pointer; user-select: none; white-space: nowrap; }
+    .headerSort .th-inner { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    .headerSort .sortArrow { display: inline-block; width: 18px; text-align: center; color: #bbb; font-weight: 700; }
+    .headerSort.active { background: transparent; }
+    .headerSort.active .sortArrow { color: #0b66c3; }
+
+    /* Modal (must be above sticky header) */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+      display: none; align-items: center; justify-content: center;
+      padding: 18px;
+      z-index: 9999;
+    }
+    .modal {
+      position: relative;
+      z-index: 10000;
+      width: min(1200px, 100%);
+      background: #fff; border-radius: 12px; border: 1px solid #eee;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+      overflow: hidden;
+    }
+    .modal-header { padding: 12px 14px; background: #fafafa; display:flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .modal-body { padding: 14px; }
+    .modal-title { font-weight: 700; }
+    .close-x { border: 1px solid #ddd; background: #fff; border-radius: 8px; padding: 6px 10px; cursor: pointer; }
+    .top10-table {
+      width: 100%;
+      min-width: 0;
+      table-layout: fixed;
+    }
+    .top10-table th,
+    .top10-table td {
+      padding: 6px 6px;
+      font-size: 12px;
+      text-align: center;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <div class="row" style="align-items:center; justify-content:space-between;">
+    <h2 style="margin: 0;">Data Dashboard</h2>
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+      <button id="openDataModalBtn" type="button">更新数据</button>
+      <span id="dataMsg" class="msg"></span>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="field" style="min-width: 520px;">
+      <label>快捷日期</label>
+      <div class="chipbar" id="quickDateBar">
+        <button type="button" class="chip active" data-quick-date="all">全部</button>
+        <button type="button" class="chip" data-quick-date="today">今天</button>
+        <button type="button" class="chip" data-quick-date="yesterday">昨天</button>
+        <button type="button" class="chip" data-quick-date="last7">过去一周</button>
+        <button type="button" class="chip" data-quick-date="last30">过去一个月</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Start date</label>
+      <input id="startDate" type="date"/>
+    </div>
+    <div class="field">
+      <label>End date</label>
+      <input id="endDate" type="date"/>
+    </div>
+    <div class="field" style="min-width: 180px;">
+      <label>Country</label>
+      <select id="countrySelect">
+        <option value="ALL">All</option>
+        <option value="美国">美国</option>
+        <option value="墨西哥">墨西哥</option>
+      </select>
+    </div>
+    <div class="field product-filter-field">
+      <label>产品筛选</label>
+      <div class="product-picker-row">
+        <div id="productSelectedDisplay" class="product-selected-display" title="所有产品">所有产品</div>
+        <button id="toggleProductPickerBtn" type="button" class="product-picker-btn">选择产品</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- Product Picker Popover (top layer) -->
+  <div class="popover" id="productPickerPopover" role="dialog" aria-modal="false">
+    <div class="popover-header">
+      <div class="popover-title">选择产品（可多选）</div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button type="button" class="close-x" id="clearProductSelectionBtn">清空勾选</button>
+        <button type="button" class="close-x" id="closeProductPickerBtn">Close</button>
+      </div>
+    </div>
+    <input id="productOptionSearch" type="text" placeholder="输入关键词筛选下拉选项" style="width:100%; margin-bottom:8px;"/>
+    <div id="productOptionList" class="product-option-list"></div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 320px;">Product</th>
+          <th class="headerSort" style="width: 160px;" data-metric="gmv">
+            <span class="th-inner">GMV <span class="sortArrow">↕</span></span>
+          </th>
+          <th class="headerSort" style="width: 160px;" data-metric="orders">
+            <span class="th-inner">销量(出单) <span class="sortArrow">↕</span></span>
+          </th>
+          <th class="headerSort" style="width: 160px;" data-metric="play">
+            <span class="th-inner">播放量 <span class="sortArrow">↕</span></span>
+          </th>
+          <th class="headerSort" style="width: 160px;" data-metric="videoCount">
+            <span class="th-inner">视频数量 <span class="sortArrow">↕</span></span>
+          </th>
+          <th class="headerSort" style="width: 160px;" data-metric="commission">
+            <span class="th-inner">佣金 <span class="sortArrow">↕</span></span>
+          </th>
+          <th style="width: 220px;">前10表现视频</th>
+        </tr>
+      </thead>
+      <tbody id="productTbody"></tbody>
+    </table>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">Top 10 videos</div>
+        <button class="close-x" id="closeModalBtn" type="button">Close</button>
+      </div>
+      <div class="modal-body">
+        <div class="muted" id="modalSubTitle" style="margin-bottom: 10px;"></div>
+
+        <div class="table-wrap">
+          <table class="top10-table">
+            <thead>
+              <tr>
+                <th style="width: 48px;">Rank</th>
+                <th style="width: 150px;">Video</th>
+                <th style="width: 90px;">发布日期</th>
+                <th style="width: 95px;">产品</th>
+                <th style="width: 90px;">拍摄员</th>
+                <th style="width: 85px;">销量(出单)</th>
+                <th style="width: 95px;">GMV</th>
+                <th style="width: 95px;">播放量</th>
+                <th style="width: 95px;">佣金</th>
+              </tr>
+            </thead>
+            <tbody id="top10Tbody"></tbody>
+          </table>
+        </div>
+
+        <div class="muted" style="margin-top: 10px;">
+          Top10：在当前筛选条件（时间+国家+产品搜索/展开层级）下，按“累计佣金(佣金)”降序取前 10。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Update Modal -->
+  <div class="modal-overlay" id="dataModalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">更新数据</div>
+        <button class="close-x" id="closeDataModalBtn" type="button">Close</button>
+      </div>
+      <div class="modal-body">
+        <div class="muted" style="margin-bottom:10px;">
+          粘贴最新 TSV（包含表头，Tab 分隔）。加载后会自动更新日期范围并刷新看板。
+        </div>
+        <textarea id="dataInput" class="textarea" spellcheck="false"></textarea>
+        <div style="display:flex; gap:10px; margin-top:10px; align-items:center; flex-wrap:wrap;">
+          <button id="loadDataBtn" type="button">加载数据并刷新</button>
+          <button id="resetFiltersBtn" type="button">重置筛选</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DATA_TSV = `视频链接\t发布日期\t产品\t脚本\t手机+账号\tHOOK\t拍摄员\t国家\t广告code\t累计播放量\t累计出单\t累计GMV\t累计佣金
+https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t黑色头套\ttest\t08-@rawrollhisstyle\t\t赵永琦\t美国\t\t233,867\t25\t¥1,898.15\t¥143.00
+`;
+
+    function safeText(s) { return (s ?? '').toString().trim(); }
+    function parseIntComma(s) {
+      if (!s) return 0;
+      const cleaned = s.toString().replace(/,/g, '').trim();
+      const n = Number(cleaned);
+      return Number.isFinite(n) ? Math.trunc(n) : 0;
+    }
+    function parseCurrencyYuan(s) {
+      if (!s) return 0;
+      const cleaned = s.toString().replace(/¥/g, '').replace(/,/g, '').trim();
+      const n = Number(cleaned);
+      return Number.isFinite(n) ? n : 0;
+    }
+    function parseDateYMD_CH(s) {
+      const parts = safeText(s).split('/').map(Number);
+      if (parts.length !== 3) return new Date(NaN);
+      const [y, m, d] = parts;
+      return new Date(y, m - 1, d);
+    }
+    function toDateInputValue(dateObj) {
+      const y = dateObj.getFullYear();
+      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const d = String(dateObj.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+    function formatNumber(n) { return new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n); }
+    function formatCurrency(n) {
+      return '¥' + new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+    }
+    function escapeHtml(str) {
+      return (str ?? '').toString()
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function parseTSV(tsv) {
+      const lines = tsv.trim().split(/\r?\n/);
+      const header = lines[0].split('\t').map(h => h.trim());
+      const idx = {};
+      header.forEach((h, i) => idx[h] = i);
+
+      const required = ["视频链接","发布日期","产品","脚本","拍摄员","国家","累计播放量","累计出单","累计GMV","累计佣金"];
+      for (const k of required) {
+        if (idx[k] === undefined) throw new Error(`缺少列: ${k}`);
+      }
+
+      return lines.slice(1).filter(Boolean).map(line => {
+        const cols = line.split('\t');
+        const videoUrl = safeText(cols[idx["视频链接"]]);
+        const dateStr = safeText(cols[idx["发布日期"]]);
+        const product = safeText(cols[idx["产品"]]);
+        const script = safeText(cols[idx["脚本"]]);
+        const owner = safeText(cols[idx["拍摄员"]]);
+        const country = safeText(cols[idx["国家"]]);
+        const play = parseIntComma(cols[idx["累计播放量"]]);
+        const orders = parseIntComma(cols[idx["累计出单"]]);
+        const gmv = parseCurrencyYuan(cols[idx["累计GMV"]]);
+        const commission = parseCurrencyYuan(cols[idx["累计佣金"]]);
+        return { videoUrl, dateStr, dateObj: parseDateYMD_CH(dateStr), product, script, owner, country, play, orders, gmv, commission };
+      });
+    }
+
+    // State
+    let rows = parseTSV(DATA_TSV);
+    let expanded = new Set();
+    let productSortMetric = 'gmv';
+    let productSortDir = 'desc';
+    let selectedProducts = new Set();
+
+    // UI
+    const startDateEl = document.getElementById('startDate');
+    const endDateEl = document.getElementById('endDate');
+    const countrySelectEl = document.getElementById('countrySelect');
+    const productSelectedDisplayEl = document.getElementById('productSelectedDisplay');
+    const productOptionSearchEl = document.getElementById('productOptionSearch');
+    const productOptionListEl = document.getElementById('productOptionList');
+    const toggleProductPickerBtn = document.getElementById('toggleProductPickerBtn');
+    const productPickerPopoverEl = document.getElementById('productPickerPopover');
+    const closeProductPickerBtn = document.getElementById('closeProductPickerBtn');
+    const clearProductSelectionBtn = document.getElementById('clearProductSelectionBtn');
+    const productTbody = document.getElementById('productTbody');
+    const quickDateBarEl = document.getElementById('quickDateBar');
+
+    const dataInputEl = document.getElementById('dataInput');
+    const loadDataBtn = document.getElementById('loadDataBtn');
+    const resetFiltersBtn = document.getElementById('resetFiltersBtn');
+    const dataMsgEl = document.getElementById('dataMsg');
+
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalTitleEl = document.getElementById('modalTitle');
+    const modalSubTitleEl = document.getElementById('modalSubTitle');
+    const top10Tbody = document.getElementById('top10Tbody');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+
+    const openDataModalBtn = document.getElementById('openDataModalBtn');
+    const dataModalOverlay = document.getElementById('dataModalOverlay');
+    const closeDataModalBtn = document.getElementById('closeDataModalBtn');
+
+    function valueForMetricGroup(metric, g) {
+      if (metric === 'gmv') return g.gmv ?? 0;
+      if (metric === 'orders') return g.orders ?? 0;
+      if (metric === 'play') return g.play ?? 0;
+      if (metric === 'videoCount') return g.videoCount ?? 0;
+      if (metric === 'commission') return g.commission ?? 0;
+      return 0;
+    }
+
+    function compareStrictSingleKey(a, b) {
+      const va = valueForMetricGroup(productSortMetric, a);
+      const vb = valueForMetricGroup(productSortMetric, b);
+      if (vb === va) return 0; // strict: equal keeps original order
+      return productSortDir === 'desc' ? (vb - va) : (va - vb);
+    }
+
+    function updateHeaderArrows() {
+      document.querySelectorAll('.headerSort').forEach(th => {
+        const metric = th.getAttribute('data-metric');
+        const arrowEl = th.querySelector('.sortArrow');
+        if (!arrowEl) return;
+        const active = metric === productSortMetric;
+        th.classList.toggle('active', active);
+        arrowEl.textContent = active ? (productSortDir === 'desc' ? '▲' : '▼') : '↕';
+      });
+    }
+
+    function initHeaderSorting() {
+      document.querySelectorAll('.headerSort').forEach(th => {
+        th.addEventListener('click', () => {
+          const metric = th.getAttribute('data-metric');
+          if (!metric) return;
+          if (productSortMetric === metric) productSortDir = productSortDir === 'desc' ? 'asc' : 'desc';
+          else { productSortMetric = metric; productSortDir = 'desc'; }
+          expanded = new Set();
+          updateHeaderArrows();
+          renderProducts();
+        });
+      });
+    }
+
+    function getAllProductsFromRows() {
+      return Array.from(new Set(rows.map(r => r.product).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'zh-Hans'));
+    }
+
+    function getSelectedProducts() {
+      return Array.from(selectedProducts);
+    }
+
+    function updateProductSelectedDisplay() {
+      if (!productSelectedDisplayEl) return;
+      const list = Array.from(selectedProducts);
+      if (!list.length) {
+        productSelectedDisplayEl.textContent = '所有产品';
+        productSelectedDisplayEl.title = '所有产品';
+        return;
+      }
+      const text = list.join('，');
+      productSelectedDisplayEl.textContent = text;
+      productSelectedDisplayEl.title = text;
+    }
+
+    function rebuildProductOptions({ keepSelection = true } = {}) {
+      if (!productOptionListEl) return;
+      const prev = keepSelection ? new Set(selectedProducts) : new Set();
+      const keyword = safeText(productOptionSearchEl ? productOptionSearchEl.value : '').toLowerCase();
+      const allProducts = getAllProductsFromRows();
+      const filteredProducts = keyword
+        ? allProducts.filter(p => p.toLowerCase().includes(keyword))
+        : allProducts;
+
+      // keep selected values even when keyword filters list
+      selectedProducts = keepSelection ? new Set(prev) : new Set();
+      updateProductSelectedDisplay();
+
+      productOptionListEl.innerHTML = '';
+      for (const p of filteredProducts) {
+        const label = document.createElement('label');
+        label.className = 'product-option-item';
+
+        const text = document.createElement('span');
+        text.textContent = p;
+
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.value = p;
+        cb.checked = selectedProducts.has(p);
+        cb.setAttribute('data-product-checkbox', '1');
+
+        label.appendChild(text);
+        label.appendChild(cb); // checkbox on the right
+        productOptionListEl.appendChild(label);
+      }
+    }
+
+    let productPickerOpen = false;
+
+    function positionProductPickerPopover() {
+      if (!productPickerPopoverEl) return;
+      const anchor = productSelectedDisplayEl;
+      if (!anchor) return;
+      const rect = anchor.getBoundingClientRect();
+      const width = Math.max(360, rect.width);
+      const top = rect.bottom + 8;
+      // align right edge with search input
+      const left = Math.min(window.innerWidth - width - 12, rect.right - width);
+      productPickerPopoverEl.style.width = width + 'px';
+      productPickerPopoverEl.style.top = Math.max(8, top) + 'px';
+      productPickerPopoverEl.style.left = Math.max(8, left) + 'px';
+    }
+
+    function openProductPickerPopover() {
+      if (!productPickerPopoverEl) return;
+      productPickerOpen = true;
+      rebuildProductOptions({ keepSelection: true });
+      positionProductPickerPopover();
+      productPickerPopoverEl.style.display = 'block';
+      if (productOptionSearchEl) productOptionSearchEl.focus();
+    }
+
+    function closeProductPickerPopover() {
+      if (!productPickerPopoverEl) return;
+      productPickerOpen = false;
+      productPickerPopoverEl.style.display = 'none';
+    }
+
+    function toggleProductPickerPopover() {
+      if (productPickerOpen) closeProductPickerPopover();
+      else openProductPickerPopover();
+    }
+
+    function filteredRows() {
+      const startVal = startDateEl.value;
+      const endVal = endDateEl.value;
+      const country = countrySelectEl.value;
+      const selectedProducts = getSelectedProducts();
+      const selectedSet = new Set(selectedProducts);
+
+      const start = startVal ? new Date(startVal + 'T00:00:00') : null;
+      const end = endVal ? new Date(endVal + 'T23:59:59') : null;
+
+      return rows.filter(r => {
+        if (start && r.dateObj < start) return false;
+        if (end && r.dateObj > end) return false;
+        if (country !== 'ALL' && r.country !== country) return false;
+        if (selectedSet.size > 0 && !selectedSet.has(r.product)) return false;
+        return true;
+      });
+    }
+
+    function groupByProduct(filtered) {
+      const map = new Map();
+      for (const r of filtered) {
+        if (!map.has(r.product)) map.set(r.product, { product: r.product, gmv: 0, orders: 0, play: 0, videoCount: 0, commission: 0 });
+        const agg = map.get(r.product);
+        agg.play += r.play;
+        agg.orders += r.orders;
+        agg.gmv += r.gmv;
+        agg.commission += r.commission;
+        agg.videoCount += 1;
+      }
+      return Array.from(map.values());
+    }
+
+    function groupByOwnerForProduct(filtered, product) {
+      const map = new Map();
+      for (const r of filtered) {
+        if (r.product !== product) continue;
+        const key = r.owner || 'Unknown';
+        if (!map.has(key)) map.set(key, { owner: key, gmv: 0, orders: 0, play: 0, videoCount: 0, commission: 0 });
+        const agg = map.get(key);
+        agg.play += r.play;
+        agg.orders += r.orders;
+        agg.gmv += r.gmv;
+        agg.commission += r.commission;
+        agg.videoCount += 1;
+      }
+      return Array.from(map.values());
+    }
+
+    function renderProducts() {
+      const filtered = filteredRows();
+      const products = groupByProduct(filtered);
+      products.sort(compareStrictSingleKey);
+
+      productTbody.innerHTML = '';
+
+      for (let i = 0; i < products.length; i++) {
+        const p = products[i];
+        const moduleClass = i % 2 === 0 ? 'module-a' : 'module-b';
+        const isExpanded = expanded.has(p.product);
+        const productKey = encodeURIComponent(p.product);
+
+        const tr = document.createElement('tr');
+        tr.className = moduleClass;
+        tr.innerHTML = `
+          <td style="text-align:center;">
+            <div class="product-cell-inner">
+              <button type="button" class="expandBtn" data-expand="${productKey}" style="min-width: 90px;">${isExpanded ? 'Collapse' : 'Expand'}</button>
+              <div style="text-align:center;">
+                <div style="font-weight:700;">${escapeHtml(p.product)}</div>
+              </div>
+            </div>
+          </td>
+          <td class="numCell"><span class="numWrap">${formatCurrency(p.gmv)}</span></td>
+          <td class="numCell"><span class="numWrap">${formatNumber(p.orders)}</span></td>
+          <td class="numCell"><span class="numWrap">${formatNumber(p.play)}</span></td>
+          <td class="numCell"><span class="numWrap">${formatNumber(p.videoCount)}</span></td>
+          <td class="numCell"><span class="numWrap">${formatCurrency(p.commission)}</span></td>
+          <td style="text-align:center;">
+            <button type="button" class="btn-link top10ProductBtn" data-product="${productKey}">Top10 videos (product)</button>
+          </td>
+        `;
+        productTbody.appendChild(tr);
+
+        if (isExpanded) {
+          const tr2 = document.createElement('tr');
+          tr2.className = `collapse-detail ${moduleClass}`;
+
+          const owners = groupByOwnerForProduct(filtered, p.product);
+          owners.sort(compareStrictSingleKey);
+
+          const productTotalCommission = p.commission || 0;
+          const ownerCards = owners.map(o => {
+            const ownerCommission = o.commission || 0;
+            const share = productTotalCommission > 0 ? (ownerCommission / productTotalCommission) : 0;
+            const sharePct = (share * 100).toFixed(1) + '%';
+            const ownerKey = encodeURIComponent(o.owner);
+            return `
+              <div class="detail-card" style="margin-bottom:10px; text-align:right;">
+                <div class="owner-row-grid">
+                  <div style="text-align:right; padding-right:10px;">
+                    <div style="font-weight:700;">${escapeHtml(o.owner)}</div>
+                    <div class="muted">佣金占比 ${sharePct} · 佣金 ${formatCurrency(ownerCommission)}</div>
+                  </div>
+                  <div class="owner-metric"><span class="metric-num">${formatCurrency(o.gmv)}</span></div>
+                  <div class="owner-metric"><span class="metric-num">${formatNumber(o.orders)}</span></div>
+                  <div class="owner-metric"><span class="metric-num">${formatNumber(o.play)}</span></div>
+                  <div class="owner-metric"><span class="metric-num">${formatNumber(o.videoCount)}</span></div>
+                  <div class="owner-metric"><span class="metric-num">${formatCurrency(ownerCommission)}</span></div>
+                  <div style="text-align:center; padding-right:0;">
+                    <button type="button" class="btn-link top10OwnerBtn" data-product="${productKey}" data-owner="${ownerKey}">Top10 videos (owner)</button>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+          tr2.innerHTML = `
+            <td colspan="7" style="text-align:right;">
+              <div style="padding: 8px 0 12px 0;">
+                <div style="padding: 0 0 8px 0; display:flex; justify-content:space-between; gap:10px; align-items:center;">
+                  <div style="font-weight:700;">By owners (拍摄员贡献)</div>
+                  <div class="muted"></div>
+                </div>
+                <div style="padding: 0;">
+                  ${ownerCards || '<div class="muted">No owner data</div>'}
+                </div>
+              </div>
+            </td>
+          `;
+          productTbody.appendChild(tr2);
+        }
+      }
+
+      productTbody.querySelectorAll('.expandBtn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const key = decodeURIComponent(btn.getAttribute('data-expand') || '');
+          if (expanded.has(key)) expanded.delete(key); else expanded.add(key);
+          renderProducts();
+        });
+      });
+      productTbody.querySelectorAll('.top10ProductBtn').forEach(btn => {
+        btn.addEventListener('click', () => openTop10Modal({ mode: 'product', product: decodeURIComponent(btn.getAttribute('data-product') || ''), owner: null }));
+      });
+      productTbody.querySelectorAll('.top10OwnerBtn').forEach(btn => {
+        btn.addEventListener('click', () => openTop10Modal({
+          mode: 'owner',
+          product: decodeURIComponent(btn.getAttribute('data-product') || ''),
+          owner: decodeURIComponent(btn.getAttribute('data-owner') || '')
+        }));
+      });
+    }
+
+    function openTop10Modal({ mode, product, owner }) {
+      const filtered = filteredRows();
+      let list = filtered.filter(r => r.product === product);
+      if (mode === 'owner') list = list.filter(r => (r.owner || 'Unknown') === (owner || 'Unknown'));
+      list.sort((a, b) => (b.commission ?? 0) - (a.commission ?? 0));
+      const sorted = list.slice(0, 10);
+
+      modalTitleEl.textContent = 'Top 10 videos';
+      modalSubTitleEl.textContent = mode === 'owner'
+        ? `Product: ${product} · Owner: ${owner} · 排序：佣金(累计佣金)降序`
+        : `Product: ${product} · 排序：佣金(累计佣金)降序`;
+
+      top10Tbody.innerHTML = '';
+      sorted.forEach((r, i) => {
+        top10Tbody.innerHTML += `
+          <tr>
+            <td><span class="modalNum">${i + 1}</span></td>
+            <td>
+              <div style="font-weight:600; margin-bottom:4px;">${escapeHtml(r.script || 'Video')}</div>
+              <a href="${escapeHtml(r.videoUrl)}" target="_blank" rel="noreferrer" class="btn-link" style="text-decoration:none;">Open link</a>
+            </td>
+            <td>${escapeHtml(r.dateStr)}</td>
+            <td>${escapeHtml(r.product)}</td>
+            <td>${escapeHtml(r.owner || 'Unknown')}</td>
+            <td><span class="modalNum">${formatNumber(r.orders)}</span></td>
+            <td><span class="modalNum">${formatCurrency(r.gmv)}</span></td>
+            <td><span class="modalNum">${formatNumber(r.play)}</span></td>
+            <td><span class="modalNum">${formatCurrency(r.commission)}</span></td>
+          </tr>
+        `;
+      });
+      modalOverlay.style.display = 'flex';
+    }
+
+    function updateDateRangeFromRows() {
+      const tsList = rows.map(r => r.dateObj.getTime()).filter(n => Number.isFinite(n));
+      if (!tsList.length) return;
+      const minTs = Math.min(...tsList);
+      const maxTs = Math.max(...tsList);
+      startDateEl.value = toDateInputValue(new Date(minTs));
+      endDateEl.value = toDateInputValue(new Date(maxTs));
+    }
+
+    function setQuickDateActive(keyOrNull) {
+      if (!quickDateBarEl) return;
+      quickDateBarEl.querySelectorAll('.chip[data-quick-date]').forEach(btn => {
+        const key = btn.getAttribute('data-quick-date');
+        btn.classList.toggle('active', keyOrNull === key);
+      });
+    }
+
+    function startOfDay(d) {
+      const x = new Date(d);
+      x.setHours(0, 0, 0, 0);
+      return x;
+    }
+    function endOfDay(d) {
+      const x = new Date(d);
+      x.setHours(23, 59, 59, 999);
+      return x;
+    }
+
+    function applyQuickDate(key) {
+      const now = new Date();
+      if (key === 'all') {
+        updateDateRangeFromRows();
+        setQuickDateActive('all');
+        expanded = new Set();
+        renderProducts();
+        return;
+      }
+
+      let start, end;
+      if (key === 'today') {
+        start = startOfDay(now);
+        end = endOfDay(now);
+      } else if (key === 'yesterday') {
+        const y = new Date(now);
+        y.setDate(y.getDate() - 1);
+        start = startOfDay(y);
+        end = endOfDay(y);
+      } else if (key === 'last7') {
+        end = endOfDay(now);
+        const s = new Date(now);
+        s.setDate(s.getDate() - 6);
+        start = startOfDay(s);
+      } else if (key === 'last30') {
+        end = endOfDay(now);
+        const s = new Date(now);
+        s.setDate(s.getDate() - 29);
+        start = startOfDay(s);
+      } else {
+        return;
+      }
+
+      startDateEl.value = toDateInputValue(start);
+      endDateEl.value = toDateInputValue(end);
+      setQuickDateActive(key);
+      expanded = new Set();
+      renderProducts();
+    }
+
+    function resetFilters() {
+      expanded = new Set();
+      if (productOptionSearchEl) productOptionSearchEl.value = '';
+      rebuildProductOptions({ keepSelection: false });
+      updateProductSelectedDisplay();
+      closeProductPickerPopover();
+      countrySelectEl.value = 'ALL';
+      updateDateRangeFromRows();
+      updateHeaderArrows();
+      renderProducts();
+    }
+
+    function setDataFromTsv(tsv) {
+      dataMsgEl.textContent = '';
+      dataMsgEl.className = 'msg';
+      try {
+        const parsed = parseTSV(tsv);
+        if (!parsed.length) {
+          dataMsgEl.textContent = '加载失败：解析成功但没有任何有效行（请确认 TSV 表头和数据行）。';
+          dataMsgEl.className = 'msg error';
+          return;
+        }
+        rows = parsed;
+        resetFilters();
+        dataMsgEl.textContent = `加载成功：共 ${rows.length} 条视频记录。`;
+      } catch (err) {
+        dataMsgEl.textContent = '加载失败：' + (err && err.message ? err.message : String(err));
+        dataMsgEl.className = 'msg error';
+      }
+    }
+
+    // Events
+    closeModalBtn.addEventListener('click', () => modalOverlay.style.display = 'none');
+    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) modalOverlay.style.display = 'none'; });
+
+    function openDataModal() {
+      dataModalOverlay.style.display = 'flex';
+    }
+    function closeDataModal() {
+      dataModalOverlay.style.display = 'none';
+    }
+    openDataModalBtn.addEventListener('click', () => openDataModal());
+    closeDataModalBtn.addEventListener('click', () => closeDataModal());
+    dataModalOverlay.addEventListener('click', (e) => { if (e.target === dataModalOverlay) closeDataModal(); });
+
+    loadDataBtn.addEventListener('click', () => {
+      const tsv = (dataInputEl.value || '').trim();
+      if (!tsv) {
+        dataMsgEl.textContent = '请先粘贴 TSV 数据（包含表头）。';
+        dataMsgEl.className = 'msg error';
+        return;
+      }
+      setDataFromTsv(tsv);
+      // close modal on successful parse (best-effort: if still error, msg will show)
+      if (dataMsgEl.className !== 'msg error') closeDataModal();
+    });
+    resetFiltersBtn.addEventListener('click', () => resetFilters());
+
+    if (productOptionSearchEl) {
+      productOptionSearchEl.addEventListener('input', () => {
+        // only filter option list UI, keep selected items selected
+        rebuildProductOptions({ keepSelection: true });
+        if (productPickerOpen) positionProductPickerPopover();
+      });
+    }
+    if (productOptionListEl) {
+      productOptionListEl.addEventListener('change', (e) => {
+        const t = e.target;
+        if (!t || t.getAttribute('data-product-checkbox') !== '1') return;
+        const value = t.value;
+        if (t.checked) selectedProducts.add(value);
+        else selectedProducts.delete(value);
+        updateProductSelectedDisplay();
+        expanded = new Set();
+        renderProducts();
+      });
+    }
+    if (clearProductSelectionBtn) {
+      clearProductSelectionBtn.addEventListener('click', () => {
+        selectedProducts = new Set();
+        rebuildProductOptions({ keepSelection: true });
+        updateProductSelectedDisplay();
+        expanded = new Set();
+        renderProducts();
+      });
+    }
+    if (toggleProductPickerBtn) {
+      toggleProductPickerBtn.addEventListener('click', () => toggleProductPickerPopover());
+    }
+    if (productSelectedDisplayEl) {
+      productSelectedDisplayEl.addEventListener('click', () => toggleProductPickerPopover());
+    }
+    if (closeProductPickerBtn) {
+      closeProductPickerBtn.addEventListener('click', () => closeProductPickerPopover());
+    }
+    window.addEventListener('resize', () => { if (productPickerOpen) positionProductPickerPopover(); });
+    window.addEventListener('scroll', () => { if (productPickerOpen) positionProductPickerPopover(); }, true);
+    document.addEventListener('mousedown', (e) => {
+      if (!productPickerOpen) return;
+      const t = e.target;
+      const insidePopover = productPickerPopoverEl && productPickerPopoverEl.contains(t);
+      const insideAnchor = productSelectedDisplayEl && productSelectedDisplayEl.contains(t);
+      const insideButton = toggleProductPickerBtn && toggleProductPickerBtn.contains(t);
+      if (!insidePopover && !insideAnchor && !insideButton) closeProductPickerPopover();
+    });
+    countrySelectEl.addEventListener('change', () => { expanded = new Set(); renderProducts(); });
+    [startDateEl, endDateEl].forEach(el => el.addEventListener('change', () => {
+      // manual change -> custom
+      setQuickDateActive(null);
+      expanded = new Set();
+      renderProducts();
+    }));
+
+    if (quickDateBarEl) {
+      quickDateBarEl.addEventListener('click', (e) => {
+        const btn = e.target && e.target.closest ? e.target.closest('.chip[data-quick-date]') : null;
+        if (!btn) return;
+        const key = btn.getAttribute('data-quick-date');
+        if (!key) return;
+        applyQuickDate(key);
+      });
+    }
+
+    // Init
+    (function init() {
+      dataInputEl.value = DATA_TSV;
+      initHeaderSorting();
+      updateHeaderArrows();
+      resetFilters();
+      updateProductSelectedDisplay();
+      setQuickDateActive('all');
+    })();
+  </script>
+</body>
+</html>
+
