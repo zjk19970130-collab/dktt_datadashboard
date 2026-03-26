@@ -85,6 +85,34 @@
       align-items: center;
       justify-content: flex-start;
     }
+
+    /* Totals row (between filters and table header) */
+    .totals-wrap {
+      margin: 10px 0;
+    }
+    .totals-grid {
+      display: grid;
+      grid-template-columns: 320fr repeat(5, 160fr) 220fr;
+      align-items: center;
+      width: 100%;
+      border: 1px solid #eee;
+      border-radius: 10px;
+      background: #fff;
+      padding: 10px 0;
+    }
+    .totals-cell {
+      text-align: center;
+      font-size: 12px;
+      color: #444;
+    }
+    .totals-label { color: #666; margin-right: 6px; }
+    .totals-value {
+      font-weight: 700;
+      color: #111;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum" 1;
+      white-space: nowrap;
+    }
     .chipbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
     .chip {
       padding: 6px 10px;
@@ -174,6 +202,10 @@
     .headerSort .sortArrow { display: inline-block; width: 18px; text-align: center; color: #bbb; font-weight: 700; }
     .headerSort.active { background: transparent; }
     .headerSort.active .sortArrow { color: #0b66c3; }
+    .dailyHeaderSort { cursor: pointer; user-select: none; white-space: nowrap; }
+    .dailyHeaderSort .th-inner { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    .dailyHeaderSort .sortArrow { display: inline-block; width: 16px; text-align: center; color: #bbb; font-weight: 700; }
+    .dailyHeaderSort.active .sortArrow { color: #0b66c3; }
 
     /* Modal (must be above sticky header) */
     .modal-overlay {
@@ -206,11 +238,85 @@
       text-align: center;
       vertical-align: middle;
     }
+
+    /* Left nav + page switching */
+    .app-layout { display: flex; gap: 14px; align-items: flex-start; }
+    .left-nav {
+      width: 180px;
+      border: 1px solid #eee;
+      border-radius: 10px;
+      background: #fff;
+      padding: 10px;
+      position: sticky;
+      top: 12px;
+    }
+    .left-nav-title { font-size: 12px; color: #666; margin-bottom: 8px; }
+    .nav-btn {
+      width: 100%;
+      text-align: left;
+      margin-bottom: 8px;
+      background: #fff;
+    }
+    .nav-btn.active {
+      border-color: #0b66c3;
+      background: #eef6ff;
+      color: #0b66c3;
+    }
+    .app-main { flex: 1; min-width: 0; }
+    .blank-page {
+      border: 1px dashed #ddd;
+      border-radius: 10px;
+      min-height: 420px;
+      padding: 16px;
+      color: #666;
+      background: #fff;
+    }
+    .daily-wrap { background: #fff; }
+    .chart-card {
+      border: 1px solid #eee;
+      border-radius: 10px;
+      background: #fff;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .chart-title {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #222;
+    }
+    .daily-expand-btn {
+      padding: 4px 8px;
+      font-size: 12px;
+      border-radius: 6px;
+    }
+    .daily-subrow {
+      background: #fcfcff;
+    }
+    .daily-subrow .sub-wrap {
+      padding: 8px 10px;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      background: #fff;
+    }
+    #dailyTrendChart {
+      width: 100% !important;
+      height: 260px !important;
+    }
   </style>
 </head>
 <body>
+  <div class="app-layout">
+    <aside class="left-nav">
+      <div class="left-nav-title">页面选项</div>
+      <button id="navDashboardBtn" class="nav-btn active" type="button">大盘数据</button>
+      <button id="navBlankBtn" class="nav-btn" type="button">每日出单数据</button>
+    </aside>
+
+    <main class="app-main">
+      <section id="dashboardPage">
   <div class="row" style="align-items:center; justify-content:space-between;">
-    <h2 style="margin: 0;">Data Dashboard</h2>
+    <h2 style="margin: 0;">大盘数据</h2>
     <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
       <button id="openDataModalBtn" type="button">更新数据</button>
       <span id="dataMsg" class="msg"></span>
@@ -268,6 +374,30 @@
     <div id="productOptionList" class="product-option-list"></div>
   </div>
 
+  <div class="totals-wrap">
+    <div class="totals-grid" id="totalsGrid">
+      <div class="totals-cell">
+        <span class="totals-label">product - 总产品数</span><span class="totals-value" id="totalProducts">0</span>
+      </div>
+      <div class="totals-cell">
+        <span class="totals-label">GMV - 总GMV数量</span><span class="totals-value" id="totalGmv">¥0.00</span>
+      </div>
+      <div class="totals-cell">
+        <span class="totals-label">销量（出单）- 总出单数量</span><span class="totals-value" id="totalOrders">0</span>
+      </div>
+      <div class="totals-cell">
+        <span class="totals-label">播放量 - 总播放量</span><span class="totals-value" id="totalPlay">0</span>
+      </div>
+      <div class="totals-cell">
+        <span class="totals-label">视频数量 - 总视频数量</span><span class="totals-value" id="totalVideos">0</span>
+      </div>
+      <div class="totals-cell">
+        <span class="totals-label">佣金 - 总佣金</span><span class="totals-value" id="totalCommission">¥0.00</span>
+      </div>
+      <div class="totals-cell"></div>
+    </div>
+  </div>
+
   <div class="table-wrap">
     <table>
       <thead>
@@ -293,6 +423,91 @@
       </thead>
       <tbody id="productTbody"></tbody>
     </table>
+  </div>
+      </section>
+
+      <section id="blankPage" class="daily-wrap" style="display:none;">
+        <div class="row" style="align-items:center; justify-content:space-between;">
+          <h2 style="margin: 0;">每日出单数据</h2>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <button id="openDailyDataModalBtn" type="button">更新每日数据</button>
+            <span id="dailyDataMsg" class="msg"></span>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field" style="min-width: 520px;">
+            <label>快捷日期</label>
+            <div class="chipbar" id="dailyQuickDateBar">
+              <button type="button" class="chip active" data-daily-quick-date="all">全部</button>
+              <button type="button" class="chip" data-daily-quick-date="today">今天</button>
+              <button type="button" class="chip" data-daily-quick-date="yesterday">昨天</button>
+              <button type="button" class="chip" data-daily-quick-date="last7">过去一周</button>
+              <button type="button" class="chip" data-daily-quick-date="last30">过去一个月</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Start date</label>
+            <input id="dailyStartDate" type="date"/>
+          </div>
+          <div class="field">
+            <label>End date</label>
+            <input id="dailyEndDate" type="date"/>
+          </div>
+          <div class="field" style="min-width: 180px;">
+            <label>账号</label>
+            <select id="dailyAccountSelect"><option value="ALL">All</option></select>
+          </div>
+          <div class="field" style="min-width: 160px;">
+            <label>拍剪员</label>
+            <select id="dailyEditorSelect"><option value="ALL">All</option></select>
+          </div>
+          <div class="field" style="min-width: 160px;">
+            <label>产品</label>
+            <select id="dailyProductSelect"><option value="ALL">All</option></select>
+          </div>
+          <div class="field" style="min-width: 140px;">
+            <label>国家</label>
+            <select id="dailyCountrySelect"><option value="ALL">All</option></select>
+          </div>
+        </div>
+
+        <div class="totals-wrap">
+          <div class="totals-grid">
+            <div class="totals-cell"><span class="totals-label">组合行数</span><span class="totals-value" id="dailyTotalRows">0</span></div>
+            <div class="totals-cell"><span class="totals-label">总GMV</span><span class="totals-value" id="dailyTotalGmv">0</span></div>
+            <div class="totals-cell"><span class="totals-label">总出单数量</span><span class="totals-value" id="dailyTotalOrders">0</span></div>
+            <div class="totals-cell"></div><div class="totals-cell"></div><div class="totals-cell"></div><div class="totals-cell"></div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title">每日趋势（左轴：美元 GMV，右轴：单量）</div>
+          <canvas id="dailyTrendChart" height="100"></canvas>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="dailyHeaderSort" data-daily-sort="date" style="width: 130px;"><span class="th-inner">日期 <span class="sortArrow">↕</span></span></th>
+                <th class="dailyHeaderSort" data-daily-sort="gmv" style="width: 130px;"><span class="th-inner">GMV <span class="sortArrow">↕</span></span></th>
+                <th class="dailyHeaderSort" data-daily-sort="orders" style="width: 110px;"><span class="th-inner">出单数量 <span class="sortArrow">↕</span></span></th>
+                <th class="dailyHeaderSort" data-daily-sort="commission" style="width: 120px;"><span class="th-inner">佣金 <span class="sortArrow">↕</span></span></th>
+                <th class="dailyHeaderSort" data-daily-sort="commissionGmv" style="width: 120px;"><span class="th-inner">佣金GMV <span class="sortArrow">↕</span></span></th>
+                <th class="dailyHeaderSort" data-daily-sort="gmvCny" style="width: 130px;"><span class="th-inner">GMV人民币 <span class="sortArrow">↕</span></span></th>
+                <th class="dailyHeaderSort" data-daily-sort="commissionCny" style="width: 130px;"><span class="th-inner">佣金人民币 <span class="sortArrow">↕</span></span></th>
+                <th style="width: 110px;">视频贡献</th>
+                <th style="width: 110px;">产品贡献</th>
+                <th style="width: 110px;">拍剪员贡献</th>
+                <th style="width: 110px;">账号贡献</th>
+              </tr>
+            </thead>
+            <tbody id="dailyTbody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
   </div>
 
   <!-- Modal -->
@@ -351,9 +566,33 @@
     </div>
   </div>
 
+  <!-- Daily Data Update Modal -->
+  <div class="modal-overlay" id="dailyDataModalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">更新每日出单数据</div>
+        <button class="close-x" id="closeDailyDataModalBtn" type="button">Close</button>
+      </div>
+      <div class="modal-body">
+        <div class="muted" style="margin-bottom:10px;">
+          粘贴每日数据 TSV（含表头：日期、手机+账号、拍剪员、产品、国家、GMV、出单数量...）。
+        </div>
+        <textarea id="dailyDataInput" class="textarea" spellcheck="false"></textarea>
+        <div style="display:flex; gap:10px; margin-top:10px; align-items:center; flex-wrap:wrap;">
+          <button id="loadDailyDataBtn" type="button">加载每日数据</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     const DEFAULT_TSV_TEMPLATE = `视频链接\t发布日期\t产品\t脚本\t手机+账号\tHOOK\t拍摄员\t国家\t广告code\t累计播放量\t累计出单\t累计GMV\t累计佣金
 https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t黑色头套\ttest\t08-@rawrollhisstyle\t\t赵永琦\t美国\t\t233,867\t25\t¥1,898.15\t¥143.00
+`;
+    const DEFAULT_DAILY_TSV_TEMPLATE = `日期\t手机+账号\t拍剪员\t产品\t国家\tGMV\t出单数量\t佣金\t佣金GMV\tGMV人民币\t佣金人民币
+2026/03/24\t15-@graham.felix2\t赵永琦\t祛痘膏\t美国\t$39.46\t2\t$0.30\t$29.88\t¥268.33\t¥2.01
+2026/03/24\t28-@wheelbeat\t邵佳运\t耳屎清油\t美国\t$55.73\t3\t$0.47\t$46.92\t¥378.96\t¥3.16
 `;
 
     function safeText(s) { return (s ?? '').toString().trim(); }
@@ -365,7 +604,7 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
     }
     function parseCurrencyYuan(s) {
       if (!s) return 0;
-      const cleaned = s.toString().replace(/¥/g, '').replace(/,/g, '').trim();
+      const cleaned = s.toString().replace(/[¥$]/g, '').replace(/,/g, '').trim();
       const n = Number(cleaned);
       return Number.isFinite(n) ? n : 0;
     }
@@ -375,6 +614,31 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
       const [y, m, d] = parts;
       return new Date(y, m - 1, d);
     }
+
+    function parseDailyDateFlexible(s) {
+      const t = safeText(s);
+      if (!t) return new Date(NaN);
+
+      // 1) YYYY/MM/DD or YYYY-MM-DD
+      let m = t.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+      if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+
+      // 2) M月D日 (year defaults to current year)
+      m = t.match(/^(\d{1,2})月(\d{1,2})日$/);
+      if (m) {
+        const y = new Date().getFullYear();
+        return new Date(y, Number(m[1]) - 1, Number(m[2]));
+      }
+
+      // 3) M/D or M-D (year defaults to current year)
+      m = t.match(/^(\d{1,2})[\/\-](\d{1,2})$/);
+      if (m) {
+        const y = new Date().getFullYear();
+        return new Date(y, Number(m[1]) - 1, Number(m[2]));
+      }
+
+      return new Date(NaN);
+    }
     function toDateInputValue(dateObj) {
       const y = dateObj.getFullYear();
       const m = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -382,6 +646,9 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
       return `${y}-${m}-${d}`;
     }
     function formatNumber(n) { return new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n); }
+    function formatUsd(n) {
+      return '$' + new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+    }
     function formatCurrency(n) {
       return '¥' + new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
     }
@@ -421,8 +688,56 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
       });
     }
 
+    function parseDailyTSV(tsv) {
+      const lines = tsv.trim().split(/\r?\n/);
+      const header = lines[0].split('\t').map(h => h.trim());
+      const idx = {};
+      header.forEach((h, i) => idx[h] = i);
+      const videoFieldCandidates = ['视频链接', '链接', 'video_url', 'videoUrl', '视频URL', '视频url', 'url'];
+      const videoField = videoFieldCandidates.find(k => idx[k] !== undefined);
+      const required = ['日期', '手机+账号', '拍剪员', '产品', '国家', 'GMV', '出单数量'];
+      for (const k of required) {
+        if (idx[k] === undefined) throw new Error(`缺少列: ${k}`);
+      }
+      return lines.slice(1).filter(Boolean).map(line => {
+        const cols = line.split('\t');
+        const dateStr = safeText(cols[idx['日期']]);
+        const account = safeText(cols[idx['手机+账号']]);
+        const editor = safeText(cols[idx['拍剪员']]);
+        const product = safeText(cols[idx['产品']]);
+        const country = safeText(cols[idx['国家']]);
+        const gmv = parseCurrencyYuan(cols[idx['GMV']]);
+        const orders = parseIntComma(cols[idx['出单数量']]);
+        const commission = idx['佣金'] !== undefined ? parseCurrencyYuan(cols[idx['佣金']]) : 0;
+        const commissionGmv = idx['佣金GMV'] !== undefined ? parseCurrencyYuan(cols[idx['佣金GMV']]) : 0;
+        const gmvCny = idx['GMV人民币'] !== undefined ? parseCurrencyYuan(cols[idx['GMV人民币']]) : 0;
+        const commissionCny = idx['佣金人民币'] !== undefined ? parseCurrencyYuan(cols[idx['佣金人民币']]) : 0;
+        const videoUrl = videoField ? safeText(cols[idx[videoField]]) : '';
+        const dObj = parseDailyDateFlexible(dateStr);
+        return {
+          dateStr,
+          dateObj: dObj,
+          videoUrl,
+          account,
+          editor,
+          product,
+          country,
+          gmv,
+          orders,
+          commission,
+          commissionGmv,
+          gmvCny,
+          commissionCny
+        };
+      });
+    }
+
     // State
     let rows = parseTSV(DEFAULT_TSV_TEMPLATE);
+    let dailyRows = [];
+    let dailyExpanded = { date: null, mode: null };
+    let dailySortMetric = 'date';
+    let dailySortDir = 'desc';
     let expanded = new Set();
     let productSortMetric = 'gmv';
     let productSortDir = 'desc';
@@ -453,9 +768,39 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
     const top10Tbody = document.getElementById('top10Tbody');
     const closeModalBtn = document.getElementById('closeModalBtn');
 
+    const totalProductsEl = document.getElementById('totalProducts');
+    const totalGmvEl = document.getElementById('totalGmv');
+    const totalOrdersEl = document.getElementById('totalOrders');
+    const totalPlayEl = document.getElementById('totalPlay');
+    const totalVideosEl = document.getElementById('totalVideos');
+    const totalCommissionEl = document.getElementById('totalCommission');
+
     const openDataModalBtn = document.getElementById('openDataModalBtn');
     const dataModalOverlay = document.getElementById('dataModalOverlay');
     const closeDataModalBtn = document.getElementById('closeDataModalBtn');
+    const navDashboardBtn = document.getElementById('navDashboardBtn');
+    const navBlankBtn = document.getElementById('navBlankBtn');
+    const dashboardPageEl = document.getElementById('dashboardPage');
+    const blankPageEl = document.getElementById('blankPage');
+    const openDailyDataModalBtn = document.getElementById('openDailyDataModalBtn');
+    const dailyDataModalOverlay = document.getElementById('dailyDataModalOverlay');
+    const closeDailyDataModalBtn = document.getElementById('closeDailyDataModalBtn');
+    const dailyDataInputEl = document.getElementById('dailyDataInput');
+    const loadDailyDataBtn = document.getElementById('loadDailyDataBtn');
+    const dailyDataMsgEl = document.getElementById('dailyDataMsg');
+    const dailyStartDateEl = document.getElementById('dailyStartDate');
+    const dailyEndDateEl = document.getElementById('dailyEndDate');
+    const dailyQuickDateBarEl = document.getElementById('dailyQuickDateBar');
+    const dailyAccountSelectEl = document.getElementById('dailyAccountSelect');
+    const dailyEditorSelectEl = document.getElementById('dailyEditorSelect');
+    const dailyProductSelectEl = document.getElementById('dailyProductSelect');
+    const dailyCountrySelectEl = document.getElementById('dailyCountrySelect');
+    const dailyTbodyEl = document.getElementById('dailyTbody');
+    const dailyTotalRowsEl = document.getElementById('dailyTotalRows');
+    const dailyTotalGmvEl = document.getElementById('dailyTotalGmv');
+    const dailyTotalOrdersEl = document.getElementById('dailyTotalOrders');
+    const dailyTrendChartEl = document.getElementById('dailyTrendChart');
+    let dailyTrendChart = null;
 
     function valueForMetricGroup(metric, g) {
       if (metric === 'gmv') return g.gmv ?? 0;
@@ -588,6 +933,15 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
       else openProductPickerPopover();
     }
 
+    function switchPage(page) {
+      const showDashboard = page === 'dashboard';
+      if (dashboardPageEl) dashboardPageEl.style.display = showDashboard ? '' : 'none';
+      if (blankPageEl) blankPageEl.style.display = showDashboard ? 'none' : '';
+      if (navDashboardBtn) navDashboardBtn.classList.toggle('active', showDashboard);
+      if (navBlankBtn) navBlankBtn.classList.toggle('active', !showDashboard);
+      closeProductPickerPopover();
+    }
+
     function filteredRows() {
       const startVal = startDateEl.value;
       const endVal = endDateEl.value;
@@ -621,6 +975,30 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
       return Array.from(map.values());
     }
 
+    function updateTotals() {
+      const filtered = filteredRows();
+      const productSet = new Set(filtered.map(r => r.product).filter(Boolean));
+
+      let gmv = 0;
+      let orders = 0;
+      let play = 0;
+      let commission = 0;
+      for (const r of filtered) {
+        gmv += r.gmv || 0;
+        orders += r.orders || 0;
+        play += r.play || 0;
+        commission += r.commission || 0;
+      }
+      const videos = filtered.length; // video count = rows count (your existing logic)
+
+      if (totalProductsEl) totalProductsEl.textContent = String(productSet.size);
+      if (totalGmvEl) totalGmvEl.textContent = formatCurrency(gmv);
+      if (totalOrdersEl) totalOrdersEl.textContent = formatNumber(orders);
+      if (totalPlayEl) totalPlayEl.textContent = formatNumber(play);
+      if (totalVideosEl) totalVideosEl.textContent = formatNumber(videos);
+      if (totalCommissionEl) totalCommissionEl.textContent = formatCurrency(commission);
+    }
+
     function groupByOwnerForProduct(filtered, product) {
       const map = new Map();
       for (const r of filtered) {
@@ -639,6 +1017,7 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
 
     function renderProducts() {
       const filtered = filteredRows();
+      updateTotals();
       const products = groupByProduct(filtered);
       products.sort(compareStrictSingleKey);
 
@@ -874,20 +1253,455 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
       }
     }
 
-    async function loadInitialDataFromFile() {
+    function upsertSelectOptions(selectEl, values) {
+      if (!selectEl) return;
+      const prev = selectEl.value || 'ALL';
+      selectEl.innerHTML = '<option value="ALL">All</option>' + values.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+      selectEl.value = values.includes(prev) ? prev : 'ALL';
+    }
+
+    function populateDailyFilters() {
+      const accounts = Array.from(new Set(dailyRows.map(r => r.account).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'zh-Hans'));
+      const editors = Array.from(new Set(dailyRows.map(r => r.editor).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'zh-Hans'));
+      const products = Array.from(new Set(dailyRows.map(r => r.product).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'zh-Hans'));
+      const countries = Array.from(new Set(dailyRows.map(r => r.country).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'zh-Hans'));
+      upsertSelectOptions(dailyAccountSelectEl, accounts);
+      upsertSelectOptions(dailyEditorSelectEl, editors);
+      upsertSelectOptions(dailyProductSelectEl, products);
+      upsertSelectOptions(dailyCountrySelectEl, countries);
+    }
+
+    function initDailyDateRange() {
+      const ts = dailyRows.map(r => r.dateObj && r.dateObj.getTime()).filter(n => Number.isFinite(n));
+      if (!ts.length) return;
+      dailyStartDateEl.value = toDateInputValue(new Date(Math.min(...ts)));
+      dailyEndDateEl.value = toDateInputValue(new Date(Math.max(...ts)));
+    }
+
+    function setDailyQuickDateActive(keyOrNull) {
+      if (!dailyQuickDateBarEl) return;
+      dailyQuickDateBarEl.querySelectorAll('.chip[data-daily-quick-date]').forEach(btn => {
+        const key = btn.getAttribute('data-daily-quick-date');
+        btn.classList.toggle('active', keyOrNull === key);
+      });
+    }
+
+    function applyDailyQuickDate(key) {
+      const now = new Date();
+      if (key === 'all') {
+        initDailyDateRange();
+        setDailyQuickDateActive('all');
+        dailyExpanded = { date: null, mode: null };
+        renderDailyTable();
+        return;
+      }
+      let start, end;
+      if (key === 'today') {
+        start = new Date(now); start.setHours(0,0,0,0);
+        end = new Date(now); end.setHours(23,59,59,999);
+      } else if (key === 'yesterday') {
+        const y = new Date(now); y.setDate(y.getDate() - 1);
+        start = new Date(y); start.setHours(0,0,0,0);
+        end = new Date(y); end.setHours(23,59,59,999);
+      } else if (key === 'last7') {
+        end = new Date(now); end.setHours(23,59,59,999);
+        start = new Date(now); start.setDate(start.getDate() - 6); start.setHours(0,0,0,0);
+      } else if (key === 'last30') {
+        end = new Date(now); end.setHours(23,59,59,999);
+        start = new Date(now); start.setDate(start.getDate() - 29); start.setHours(0,0,0,0);
+      } else return;
+      dailyStartDateEl.value = toDateInputValue(start);
+      dailyEndDateEl.value = toDateInputValue(end);
+      setDailyQuickDateActive(key);
+      dailyExpanded = { date: null, mode: null };
+      renderDailyTable();
+    }
+
+    function filteredDailyRows() {
+      const start = dailyStartDateEl.value ? new Date(dailyStartDateEl.value + 'T00:00:00') : null;
+      const end = dailyEndDateEl.value ? new Date(dailyEndDateEl.value + 'T23:59:59') : null;
+      const account = dailyAccountSelectEl.value;
+      const editor = dailyEditorSelectEl.value;
+      const product = dailyProductSelectEl.value;
+      const country = dailyCountrySelectEl.value;
+
+      return dailyRows.filter(r => {
+        if (start && r.dateObj < start) return false;
+        if (end && r.dateObj > end) return false;
+        if (account !== 'ALL' && r.account !== account) return false;
+        if (editor !== 'ALL' && r.editor !== editor) return false;
+        if (product !== 'ALL' && r.product !== product) return false;
+        if (country !== 'ALL' && r.country !== country) return false;
+        return true;
+      });
+    }
+
+    function renderDailyTable(opts = {}) {
+      const { updateChart = true } = opts;
+      const filtered = filteredDailyRows();
+      const byDate = new Map();
+      for (const r of filtered) {
+        const key = r.dateStr;
+        if (!byDate.has(key)) {
+          byDate.set(key, {
+            dateStr: r.dateStr,
+            dateObj: r.dateObj,
+            gmv: 0,
+            orders: 0,
+            commission: 0,
+            commissionGmv: 0,
+            gmvCny: 0,
+            commissionCny: 0
+          });
+        }
+        const a = byDate.get(key);
+        a.gmv += r.gmv || 0;
+        a.orders += r.orders || 0;
+        a.commission += r.commission || 0;
+        a.commissionGmv += r.commissionGmv || 0;
+        a.gmvCny += r.gmvCny || 0;
+        a.commissionCny += r.commissionCny || 0;
+      }
+      const dateRows = Array.from(byDate.values()).sort((a, b) => compareDailyRows(a, b));
+
+      const html = [];
+      for (const r of dateRows) {
+        const isVideo = dailyExpanded.date === r.dateStr && dailyExpanded.mode === 'video';
+        const isPhone = dailyExpanded.date === r.dateStr && dailyExpanded.mode === 'account';
+        const isEditor = dailyExpanded.date === r.dateStr && dailyExpanded.mode === 'editor';
+        const isProduct = dailyExpanded.date === r.dateStr && dailyExpanded.mode === 'product';
+        html.push(`
+          <tr>
+            <td>${escapeHtml(r.dateStr)}</td>
+            <td class="numCell"><span class="numWrap">${formatUsd(r.gmv)}</span></td>
+            <td class="numCell"><span class="numWrap">${formatNumber(r.orders)}</span></td>
+            <td class="numCell"><span class="numWrap">${formatUsd(r.commission)}</span></td>
+            <td class="numCell"><span class="numWrap">${formatUsd(r.commissionGmv)}</span></td>
+            <td class="numCell"><span class="numWrap">${formatCurrency(r.gmvCny)}</span></td>
+            <td class="numCell"><span class="numWrap">${formatCurrency(r.commissionCny)}</span></td>
+            <td><button class="daily-expand-btn" data-date="${escapeHtml(r.dateStr)}" data-mode="video" type="button">${isVideo ? '收起' : '展开'}视频</button></td>
+            <td><button class="daily-expand-btn" data-date="${escapeHtml(r.dateStr)}" data-mode="product" type="button">${isProduct ? '收起' : '展开'}产品</button></td>
+            <td><button class="daily-expand-btn" data-date="${escapeHtml(r.dateStr)}" data-mode="editor" type="button">${isEditor ? '收起' : '展开'}拍剪员</button></td>
+            <td><button class="daily-expand-btn" data-date="${escapeHtml(r.dateStr)}" data-mode="account" type="button">${isPhone ? '收起' : '展开'}账号</button></td>
+          </tr>
+        `);
+        if (dailyExpanded.date === r.dateStr && dailyExpanded.mode) {
+          html.push(renderDailySubrow(filtered, r.dateStr, dailyExpanded.mode));
+        }
+      }
+      dailyTbodyEl.innerHTML = html.join('') || '<tr><td colspan="11" class="muted">无数据</td></tr>';
+
+      const totalOrders = dateRows.reduce((s, r) => s + r.orders, 0);
+      const totalGmv = dateRows.reduce((s, r) => s + r.gmv, 0);
+      dailyTotalRowsEl.textContent = formatNumber(dateRows.length);
+      dailyTotalOrdersEl.textContent = formatNumber(totalOrders);
+      dailyTotalGmvEl.textContent = formatUsd(totalGmv);
+      if (updateChart) renderDailyTrendChart(filtered);
+
+      dailyTbodyEl.querySelectorAll('.daily-expand-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const date = btn.getAttribute('data-date');
+          const mode = btn.getAttribute('data-mode');
+          if (!date || !mode) return;
+          if (dailyExpanded.date === date && dailyExpanded.mode === mode) {
+            dailyExpanded = { date: null, mode: null };
+          } else {
+            dailyExpanded = { date, mode };
+          }
+          renderDailyTable({ updateChart: false });
+        });
+      });
+    }
+
+    function compareDailyRows(a, b) {
+      let va = 0, vb = 0;
+      if (dailySortMetric === 'date') {
+        va = a.dateObj?.getTime?.() || 0;
+        vb = b.dateObj?.getTime?.() || 0;
+      } else {
+        va = a[dailySortMetric] || 0;
+        vb = b[dailySortMetric] || 0;
+      }
+      if (va === vb) return 0;
+      return dailySortDir === 'desc' ? (vb - va) : (va - vb);
+    }
+
+    function updateDailyHeaderArrows() {
+      document.querySelectorAll('.dailyHeaderSort').forEach(th => {
+        const metric = th.getAttribute('data-daily-sort');
+        const arrow = th.querySelector('.sortArrow');
+        if (!arrow) return;
+        const active = metric === dailySortMetric;
+        th.classList.toggle('active', active);
+        arrow.textContent = active ? (dailySortDir === 'desc' ? '▲' : '▼') : '↕';
+      });
+    }
+
+    function initDailyHeaderSorting() {
+      document.querySelectorAll('.dailyHeaderSort').forEach(th => {
+        th.addEventListener('click', () => {
+          const metric = th.getAttribute('data-daily-sort');
+          if (!metric) return;
+          if (dailySortMetric === metric) dailySortDir = dailySortDir === 'desc' ? 'asc' : 'desc';
+          else {
+            dailySortMetric = metric;
+            dailySortDir = 'desc';
+          }
+          updateDailyHeaderArrows();
+          dailyExpanded = { date: null, mode: null };
+          renderDailyTable({ updateChart: false });
+        });
+      });
+    }
+
+    function renderDailySubrow(filtered, dateStr, mode) {
+      const rows = filtered.filter(r => r.dateStr === dateStr);
+      const keyName = mode === 'video'
+        ? 'videoName'
+        : (mode === 'account' ? 'account' : (mode === 'editor' ? 'editor' : 'product'));
+      const title = mode === 'video'
+        ? '当日订单贡献视频（仅出单数量不为 0）'
+        : (mode === 'account' ? '当日订单贡献账号' : (mode === 'editor' ? '当日订单贡献拍剪员' : '当日订单贡献产品'));
+      const map = new Map();
+      for (const r of rows) {
+        if (mode === 'video' && !(r.orders > 0)) continue;
+        const k = mode === 'video'
+          ? (r.videoUrl || `未命名视频（${r.account || '未知账号'} / ${r.product || '未知产品'}）`)
+          : (r[keyName] || '未知');
+        if (!map.has(k)) map.set(k, {
+          name: k,
+          videoUrl: mode === 'video' ? (r.videoUrl || '') : '',
+          products: new Set(),
+          accounts: new Set(),
+          editors: new Set(),
+          orders: 0,
+          gmv: 0,
+          commission: 0,
+          commissionGmv: 0,
+          gmvCny: 0,
+          commissionCny: 0
+        });
+        const a = map.get(k);
+        if (mode === 'video') {
+          if (r.product) a.products.add(r.product);
+          if (r.account) a.accounts.add(r.account);
+          if (r.editor) a.editors.add(r.editor);
+        }
+        a.orders += r.orders || 0;
+        a.gmv += r.gmv || 0;
+        a.commission += r.commission || 0;
+        a.commissionGmv += r.commissionGmv || 0;
+        a.gmvCny += r.gmvCny || 0;
+        a.commissionCny += r.commissionCny || 0;
+      }
+      const agg = Array.from(map.values()).sort((a, b) => b.gmv - a.gmv);
+      const itemsHtml = agg.map(x => `
+        <tr>
+          <td style="text-align:left; ${mode === 'video' ? 'white-space: nowrap;' : ''}">${mode === 'video'
+            ? (() => {
+                const productText = Array.from(x.products || []).filter(Boolean).join('/');
+                const accountText = Array.from(x.accounts || []).filter(Boolean).join('/');
+                const editorText = Array.from(x.editors || []).filter(Boolean).join('/');
+                const linkText = `${productText || '未知产品'}-${accountText || '未知账号'}-${editorText || '未知拍剪员'}`;
+                return x.videoUrl
+                  ? `<a href="${escapeHtml(x.videoUrl)}" target="_blank" rel="noreferrer" class="btn-link" style="text-decoration:none;">${escapeHtml(linkText)}</a>`
+                  : `<span class="muted">${escapeHtml(linkText)}</span>`;
+              })()
+            : escapeHtml(x.name)}</td>
+          <td class="numCell"><span class="numWrap">${formatUsd(x.gmv)}</span></td>
+          <td class="numCell"><span class="numWrap">${formatNumber(x.orders)}</span></td>
+          <td class="numCell"><span class="numWrap">${formatUsd(x.commission)}</span></td>
+          <td class="numCell"><span class="numWrap">${formatUsd(x.commissionGmv)}</span></td>
+          <td class="numCell"><span class="numWrap">${formatCurrency(x.gmvCny)}</span></td>
+          <td class="numCell"><span class="numWrap">${formatCurrency(x.commissionCny)}</span></td>
+        </tr>
+      `).join('');
+      return `
+        <tr class="daily-subrow">
+          <td colspan="11">
+            <div class="sub-wrap">
+              <div style="font-weight:700; margin-bottom:8px; text-align:left;">${title}</div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="text-align:left; ${mode === 'video' ? 'white-space: nowrap;' : ''}">${mode === 'video' ? '视频链接' : '名称'}</th>
+                      <th>GMV</th>
+                      <th>出单数量</th>
+                      <th>佣金</th>
+                      <th>佣金GMV</th>
+                      <th>GMV人民币</th>
+                      <th>佣金人民币</th>
+                    </tr>
+                  </thead>
+                  <tbody>${itemsHtml || '<tr><td colspan="7" class="muted">无数据</td></tr>'}</tbody>
+                </table>
+              </div>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+
+    function renderDailyTrendChart(filtered) {
+      if (!dailyTrendChartEl) return;
+      const byDate = new Map();
+      for (const r of filtered) {
+        const key = r.dateStr;
+        if (!byDate.has(key)) byDate.set(key, { dateStr: key, gmv: 0, commission: 0, orders: 0, ts: r.dateObj ? r.dateObj.getTime() : 0 });
+        const a = byDate.get(key);
+        a.gmv += r.gmv || 0;
+        a.commission += r.commission || 0;
+        a.orders += r.orders || 0;
+      }
+      const sorted = Array.from(byDate.values()).sort((a, b) => a.ts - b.ts);
+      const labels = sorted.map(x => x.dateStr);
+      const gmvData = sorted.map(x => Number((x.gmv || 0).toFixed(2)));
+      const commissionData = sorted.map(x => Number((x.commission || 0).toFixed(2)));
+      const ordersData = sorted.map(x => x.orders || 0);
+
+      if (dailyTrendChart) {
+        dailyTrendChart.destroy();
+        dailyTrendChart = null;
+      }
+      if (typeof Chart === 'undefined') return;
+
+      dailyTrendChart = new Chart(dailyTrendChartEl.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'GMV (USD)',
+              data: gmvData,
+              yAxisID: 'yUsd',
+              borderColor: '#2563eb',
+              backgroundColor: 'rgba(37,99,235,0.15)',
+              tension: 0.25,
+              pointRadius: 2
+            },
+            {
+              label: '佣金 (USD)',
+              data: commissionData,
+              yAxisID: 'yUsd',
+              borderColor: '#dc2626',
+              backgroundColor: 'rgba(220,38,38,0.15)',
+              tension: 0.25,
+              pointRadius: 2
+            },
+            {
+              type: 'bar',
+              label: '出单数量',
+              data: ordersData,
+              yAxisID: 'yOrders',
+              borderColor: 'rgba(96,165,250,0.95)',
+              backgroundColor: 'rgba(96,165,250,0.28)',
+              borderWidth: 1,
+              barPercentage: 0.7,
+              categoryPercentage: 0.8
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          scales: {
+            x: { title: { display: true, text: '日期' } },
+            yUsd: {
+              type: 'linear',
+              position: 'left',
+              title: { display: true, text: '美元 ($)' },
+              ticks: { callback: (v) => '$' + Number(v).toLocaleString() }
+            },
+            yOrders: {
+              type: 'linear',
+              position: 'right',
+              title: { display: true, text: '单量' },
+              grid: { drawOnChartArea: false }
+            }
+          },
+          plugins: {
+            legend: { position: 'top' },
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+              callbacks: {
+                title: (items) => {
+                  if (!items || !items.length) return '';
+                  return `日期: ${items[0].label || ''}`;
+                },
+                label: (ctx) => {
+                  const dsLabel = ctx.dataset?.label || '';
+                  const v = ctx.parsed?.y ?? 0;
+                  if (dsLabel.includes('GMV (USD)')) return `GMV: ${formatUsd(v)}`;
+                  if (dsLabel.includes('佣金 (USD)')) return `佣金: ${formatUsd(v)}`;
+                  return `单量: ${formatNumber(v)}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function setDailyDataFromTsv(tsv) {
+      try {
+        const parsed = parseDailyTSV(tsv);
+        dailyRows = parsed;
+        populateDailyFilters();
+        initDailyDateRange();
+        renderDailyTable();
+        dailyDataMsgEl.textContent = `每日数据已加载：${dailyRows.length} 条`;
+        dailyDataMsgEl.className = 'msg';
+        return true;
+      } catch (e) {
+        dailyDataMsgEl.textContent = '每日数据加载失败：' + (e && e.message ? e.message : String(e));
+        dailyDataMsgEl.className = 'msg error';
+        return false;
+      }
+    }
+
+    async function loadInitialDailyData() {
+      try {
+        const res = await fetch('./data_daily.tsv?ts=' + Date.now(), { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const tsv = await res.text();
+        if (!tsv || !tsv.trim()) throw new Error('empty');
+        setDailyDataFromTsv(tsv);
+        if (dailyDataInputEl) dailyDataInputEl.value = tsv;
+      } catch (e) {
+        setDailyDataFromTsv(DEFAULT_DAILY_TSV_TEMPLATE);
+        if (dailyDataInputEl) dailyDataInputEl.value = DEFAULT_DAILY_TSV_TEMPLATE;
+      }
+    }
+
+    async function loadInitialData() {
+      // When opened as file://, browsers often block fetching sibling files.
+      // In that case, fall back to template and let user paste data via "更新数据".
+      if (location && location.protocol === 'file:') {
+        setDataFromTsv(DEFAULT_TSV_TEMPLATE);
+        dataMsgEl.textContent = '本地 file:// 打开时无法自动读取 data.tsv；请点“更新数据”粘贴，或用本地服务器方式打开。';
+        dataMsgEl.className = 'msg';
+        dataInputEl.value = DEFAULT_TSV_TEMPLATE;
+        return;
+      }
+
       try {
         const res = await fetch('./data.tsv?ts=' + Date.now(), { cache: 'no-store' });
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const tsv = await res.text();
-        if (!tsv || !tsv.trim()) throw new Error('empty file');
+        if (!tsv || !tsv.trim()) throw new Error('empty');
         setDataFromTsv(tsv);
-        return tsv;
+        dataInputEl.value = tsv;
       } catch (e) {
-        // fallback: keep page available even when data.tsv missing
         setDataFromTsv(DEFAULT_TSV_TEMPLATE);
         dataMsgEl.textContent = '未读取到 data.tsv，已使用页面内置示例数据。';
         dataMsgEl.className = 'msg';
-        return DEFAULT_TSV_TEMPLATE;
+        dataInputEl.value = DEFAULT_TSV_TEMPLATE;
       }
     }
 
@@ -904,6 +1718,9 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
     openDataModalBtn.addEventListener('click', () => openDataModal());
     closeDataModalBtn.addEventListener('click', () => closeDataModal());
     dataModalOverlay.addEventListener('click', (e) => { if (e.target === dataModalOverlay) closeDataModal(); });
+    if (openDailyDataModalBtn) openDailyDataModalBtn.addEventListener('click', () => { dailyDataModalOverlay.style.display = 'flex'; });
+    if (closeDailyDataModalBtn) closeDailyDataModalBtn.addEventListener('click', () => { dailyDataModalOverlay.style.display = 'none'; });
+    if (dailyDataModalOverlay) dailyDataModalOverlay.addEventListener('click', (e) => { if (e.target === dailyDataModalOverlay) dailyDataModalOverlay.style.display = 'none'; });
 
     loadDataBtn.addEventListener('click', () => {
       const tsv = (dataInputEl.value || '').trim();
@@ -917,6 +1734,18 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
       if (dataMsgEl.className !== 'msg error') closeDataModal();
     });
     resetFiltersBtn.addEventListener('click', () => resetFilters());
+    if (loadDailyDataBtn) {
+      loadDailyDataBtn.addEventListener('click', () => {
+        const tsv = (dailyDataInputEl && dailyDataInputEl.value ? dailyDataInputEl.value : '').trim();
+        if (!tsv) {
+          dailyDataMsgEl.textContent = '请先粘贴每日数据 TSV。';
+          dailyDataMsgEl.className = 'msg error';
+          return;
+        }
+        const ok = setDailyDataFromTsv(tsv);
+        if (ok) dailyDataModalOverlay.style.display = 'none';
+      });
+    }
 
     if (productOptionSearchEl) {
       productOptionSearchEl.addEventListener('input', () => {
@@ -949,6 +1778,8 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
     if (toggleProductPickerBtn) {
       toggleProductPickerBtn.addEventListener('click', () => toggleProductPickerPopover());
     }
+    if (navDashboardBtn) navDashboardBtn.addEventListener('click', () => switchPage('dashboard'));
+    if (navBlankBtn) navBlankBtn.addEventListener('click', () => switchPage('blank'));
     if (productSelectedDisplayEl) {
       productSelectedDisplayEl.addEventListener('click', () => toggleProductPickerPopover());
     }
@@ -983,15 +1814,34 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
       });
     }
 
+    [dailyStartDateEl, dailyEndDateEl, dailyAccountSelectEl, dailyEditorSelectEl, dailyProductSelectEl, dailyCountrySelectEl]
+      .forEach(el => el && el.addEventListener('change', () => {
+        if (el === dailyStartDateEl || el === dailyEndDateEl) setDailyQuickDateActive(null);
+        dailyExpanded = { date: null, mode: null };
+        renderDailyTable();
+      }));
+    if (dailyQuickDateBarEl) {
+      dailyQuickDateBarEl.addEventListener('click', (e) => {
+        const btn = e.target && e.target.closest ? e.target.closest('.chip[data-daily-quick-date]') : null;
+        if (!btn) return;
+        const key = btn.getAttribute('data-daily-quick-date');
+        if (!key) return;
+        applyDailyQuickDate(key);
+      });
+    }
+
     // Init
     (async function init() {
       dataInputEl.value = DEFAULT_TSV_TEMPLATE;
       initHeaderSorting();
+      initDailyHeaderSorting();
       updateHeaderArrows();
-      const initialTsv = await loadInitialDataFromFile();
-      dataInputEl.value = initialTsv;
+      updateDailyHeaderArrows();
+      await loadInitialData();
+      await loadInitialDailyData();
       updateProductSelectedDisplay();
       setQuickDateActive('all');
+      setDailyQuickDateActive('all');
     })();
   </script>
 </body>
