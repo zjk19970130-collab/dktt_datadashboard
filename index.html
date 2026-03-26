@@ -352,7 +352,7 @@
   </div>
 
   <script>
-    const DATA_TSV = `视频链接\t发布日期\t产品\t脚本\t手机+账号\tHOOK\t拍摄员\t国家\t广告code\t累计播放量\t累计出单\t累计GMV\t累计佣金
+    const DEFAULT_TSV_TEMPLATE = `视频链接\t发布日期\t产品\t脚本\t手机+账号\tHOOK\t拍摄员\t国家\t广告code\t累计播放量\t累计出单\t累计GMV\t累计佣金
 https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t黑色头套\ttest\t08-@rawrollhisstyle\t\t赵永琦\t美国\t\t233,867\t25\t¥1,898.15\t¥143.00
 `;
 
@@ -422,7 +422,7 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
     }
 
     // State
-    let rows = parseTSV(DATA_TSV);
+    let rows = parseTSV(DEFAULT_TSV_TEMPLATE);
     let expanded = new Set();
     let productSortMetric = 'gmv';
     let productSortDir = 'desc';
@@ -874,6 +874,23 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
       }
     }
 
+    async function loadInitialDataFromFile() {
+      try {
+        const res = await fetch('./data.tsv?ts=' + Date.now(), { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const tsv = await res.text();
+        if (!tsv || !tsv.trim()) throw new Error('empty file');
+        setDataFromTsv(tsv);
+        return tsv;
+      } catch (e) {
+        // fallback: keep page available even when data.tsv missing
+        setDataFromTsv(DEFAULT_TSV_TEMPLATE);
+        dataMsgEl.textContent = '未读取到 data.tsv，已使用页面内置示例数据。';
+        dataMsgEl.className = 'msg';
+        return DEFAULT_TSV_TEMPLATE;
+      }
+    }
+
     // Events
     closeModalBtn.addEventListener('click', () => modalOverlay.style.display = 'none');
     modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) modalOverlay.style.display = 'none'; });
@@ -967,11 +984,12 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
     }
 
     // Init
-    (function init() {
-      dataInputEl.value = DATA_TSV;
+    (async function init() {
+      dataInputEl.value = DEFAULT_TSV_TEMPLATE;
       initHeaderSorting();
       updateHeaderArrows();
-      resetFilters();
+      const initialTsv = await loadInitialDataFromFile();
+      dataInputEl.value = initialTsv;
       updateProductSelectedDisplay();
       setQuickDateActive('all');
     })();
