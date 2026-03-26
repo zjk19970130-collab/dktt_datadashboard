@@ -113,6 +113,9 @@
       font-feature-settings: "tnum" 1;
       white-space: nowrap;
     }
+    #dashboardPage .totals-cell { font-size: 14px; }
+    #dashboardPage .totals-label { font-size: 13px; }
+    #dashboardPage .totals-value { font-size: 17px; }
     .chipbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
     .chip {
       padding: 6px 10px;
@@ -206,6 +209,18 @@
     .dailyHeaderSort .th-inner { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
     .dailyHeaderSort .sortArrow { display: inline-block; width: 16px; text-align: center; color: #bbb; font-weight: 700; }
     .dailyHeaderSort.active .sortArrow { color: #0b66c3; }
+    .peopleHeaderSort { cursor: pointer; user-select: none; white-space: nowrap; }
+    .peopleHeaderSort .th-inner { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    .peopleHeaderSort .sortArrow { display: inline-block; width: 16px; text-align: center; color: #bbb; font-weight: 700; }
+    .peopleHeaderSort.active .sortArrow { color: #0b66c3; }
+    .accountHeaderSort { cursor: pointer; user-select: none; white-space: nowrap; }
+    .accountHeaderSort .th-inner { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    .accountHeaderSort .sortArrow { display: inline-block; width: 16px; text-align: center; color: #bbb; font-weight: 700; }
+    .accountHeaderSort.active .sortArrow { color: #0b66c3; }
+    .videoHeaderSort { cursor: pointer; user-select: none; white-space: nowrap; }
+    .videoHeaderSort .th-inner { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    .videoHeaderSort .sortArrow { display: inline-block; width: 16px; text-align: center; color: #bbb; font-weight: 700; }
+    .videoHeaderSort.active .sortArrow { color: #0b66c3; }
 
     /* Modal (must be above sticky header) */
     .modal-overlay {
@@ -303,6 +318,21 @@
       width: 100% !important;
       height: 260px !important;
     }
+    #dailyTrendChartCny {
+      width: 100% !important;
+      height: 260px !important;
+    }
+    #compareTrendChart {
+      width: 100% !important;
+      height: 300px !important;
+    }
+    .compare-row {
+      border: 1px solid #eee;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 8px;
+      background: #fff;
+    }
   </style>
 </head>
 <body>
@@ -311,6 +341,10 @@
       <div class="left-nav-title">页面选项</div>
       <button id="navDashboardBtn" class="nav-btn active" type="button">大盘数据</button>
       <button id="navBlankBtn" class="nav-btn" type="button">每日出单数据</button>
+      <button id="navPeopleBtn" class="nav-btn" type="button">人员排行</button>
+      <button id="navAccountRankBtn" class="nav-btn" type="button">账号排行</button>
+      <button id="navVideoRankBtn" class="nav-btn" type="button">视频排行</button>
+      <button id="navCompareBtn" class="nav-btn" type="button">数据对比</button>
     </aside>
 
     <main class="app-main">
@@ -474,16 +508,31 @@
 
         <div class="totals-wrap">
           <div class="totals-grid">
-            <div class="totals-cell"><span class="totals-label">组合行数</span><span class="totals-value" id="dailyTotalRows">0</span></div>
             <div class="totals-cell"><span class="totals-label">总GMV</span><span class="totals-value" id="dailyTotalGmv">0</span></div>
+            <div class="totals-cell"><span class="totals-label">总佣金</span><span class="totals-value" id="dailyTotalCommission">0</span></div>
+            <div class="totals-cell"><span class="totals-label">总人民币佣金</span><span class="totals-value" id="dailyTotalCommissionCny">0</span></div>
             <div class="totals-cell"><span class="totals-label">总出单数量</span><span class="totals-value" id="dailyTotalOrders">0</span></div>
-            <div class="totals-cell"></div><div class="totals-cell"></div><div class="totals-cell"></div><div class="totals-cell"></div>
+            <div class="totals-cell"></div><div class="totals-cell"></div><div class="totals-cell"></div>
           </div>
         </div>
 
-        <div class="chart-card">
-          <div class="chart-title">每日趋势（左轴：美元 GMV，右轴：单量）</div>
-          <canvas id="dailyTrendChart" height="100"></canvas>
+        <div class="chart-card" id="dailyUsdChartCard">
+          <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div class="chart-title" style="margin:0;">每日趋势</div>
+            <div class="chipbar" id="dailyChartModeBar">
+              <button type="button" class="chip active" data-daily-chart-mode="usd">美元</button>
+              <button type="button" class="chip" data-daily-chart-mode="cny">人民币</button>
+              <button type="button" class="chip" data-daily-chart-mode="both">双图</button>
+            </div>
+          </div>
+          <div id="dailyUsdChartContent">
+            <div class="muted" style="margin-bottom:6px;">美元图（左轴：美元 GMV/佣金，右轴：单量）</div>
+            <canvas id="dailyTrendChart" height="100"></canvas>
+          </div>
+        </div>
+        <div class="chart-card" id="dailyCnyChartCard" style="display:none;">
+          <div class="muted" style="margin-bottom:6px;">人民币图（左轴：人民币 GMV/佣金，右轴：单量）</div>
+          <canvas id="dailyTrendChartCny" height="100"></canvas>
         </div>
 
         <div class="table-wrap">
@@ -505,6 +554,174 @@
             </thead>
             <tbody id="dailyTbody"></tbody>
           </table>
+        </div>
+      </section>
+
+      <section id="peoplePage" class="daily-wrap" style="display:none;">
+        <div class="row" style="align-items:center; justify-content:space-between;">
+          <h2 style="margin: 0;">人员排行</h2>
+        </div>
+
+        <div class="row">
+          <div class="field" style="min-width: 520px;">
+            <label>快捷日期</label>
+            <div class="chipbar" id="peopleQuickDateBar">
+              <button type="button" class="chip active" data-people-quick-date="all">全部</button>
+              <button type="button" class="chip" data-people-quick-date="today">今天</button>
+              <button type="button" class="chip" data-people-quick-date="yesterday">昨天</button>
+              <button type="button" class="chip" data-people-quick-date="last7">过去一周</button>
+              <button type="button" class="chip" data-people-quick-date="last30">过去一个月</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Start date</label>
+            <input id="peopleStartDate" type="date"/>
+          </div>
+          <div class="field">
+            <label>End date</label>
+            <input id="peopleEndDate" type="date"/>
+          </div>
+          <div class="field" style="min-width: 180px;">
+            <label>账号</label>
+            <select id="peopleAccountSelect"><option value="ALL">All</option></select>
+          </div>
+          <div class="field" style="min-width: 160px;">
+            <label>拍剪员</label>
+            <select id="peopleEditorSelect"><option value="ALL">All</option></select>
+          </div>
+          <div class="field" style="min-width: 160px;">
+            <label>产品</label>
+            <select id="peopleProductSelect"><option value="ALL">All</option></select>
+          </div>
+          <div class="field" style="min-width: 140px;">
+            <label>国家</label>
+            <select id="peopleCountrySelect"><option value="ALL">All</option></select>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 170px;">人员（拍剪员）</th>
+                <th class="peopleHeaderSort" data-people-sort="gmv" style="width: 130px;"><span class="th-inner">GMV <span class="sortArrow">↕</span></span></th>
+                <th class="peopleHeaderSort" data-people-sort="orders" style="width: 120px;"><span class="th-inner">出单数量 <span class="sortArrow">↕</span></span></th>
+                <th class="peopleHeaderSort" data-people-sort="commission" style="width: 120px;"><span class="th-inner">佣金 <span class="sortArrow">↕</span></span></th>
+                <th class="peopleHeaderSort" data-people-sort="commissionGmv" style="width: 130px;"><span class="th-inner">佣金GMV <span class="sortArrow">↕</span></span></th>
+                <th class="peopleHeaderSort" data-people-sort="gmvCny" style="width: 130px;"><span class="th-inner">GMV人民币 <span class="sortArrow">↕</span></span></th>
+                <th class="peopleHeaderSort" data-people-sort="commissionCny" style="width: 130px;"><span class="th-inner">佣金人民币 <span class="sortArrow">↕</span></span></th>
+                <th style="width: 150px;">前10视频</th>
+                <th style="width: 150px;">产品贡献</th>
+              </tr>
+            </thead>
+            <tbody id="peopleTbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="accountRankPage" class="daily-wrap" style="display:none;">
+        <div class="row" style="align-items:center; justify-content:space-between;">
+          <h2 style="margin: 0;">账号排行</h2>
+        </div>
+        <div class="row">
+          <div class="field" style="min-width: 520px;">
+            <label>快捷日期</label>
+            <div class="chipbar" id="accountRankQuickDateBar">
+              <button type="button" class="chip active" data-account-rank-quick-date="all">全部</button>
+              <button type="button" class="chip" data-account-rank-quick-date="today">今天</button>
+              <button type="button" class="chip" data-account-rank-quick-date="yesterday">昨天</button>
+              <button type="button" class="chip" data-account-rank-quick-date="last7">过去一周</button>
+              <button type="button" class="chip" data-account-rank-quick-date="last30">过去一个月</button>
+            </div>
+          </div>
+          <div class="field"><label>Start date</label><input id="accountRankStartDate" type="date"/></div>
+          <div class="field"><label>End date</label><input id="accountRankEndDate" type="date"/></div>
+          <div class="field" style="min-width: 180px;"><label>账号</label><select id="accountRankAccountSelect"><option value="ALL">All</option></select></div>
+          <div class="field" style="min-width: 160px;"><label>拍剪员</label><select id="accountRankEditorSelect"><option value="ALL">All</option></select></div>
+          <div class="field" style="min-width: 160px;"><label>产品</label><select id="accountRankProductSelect"><option value="ALL">All</option></select></div>
+          <div class="field" style="min-width: 140px;"><label>国家</label><select id="accountRankCountrySelect"><option value="ALL">All</option></select></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 170px;">账号</th>
+                <th class="accountHeaderSort" data-account-sort="gmv" style="width: 130px;"><span class="th-inner">GMV <span class="sortArrow">↕</span></span></th>
+                <th class="accountHeaderSort" data-account-sort="orders" style="width: 120px;"><span class="th-inner">出单数量 <span class="sortArrow">↕</span></span></th>
+                <th class="accountHeaderSort" data-account-sort="commission" style="width: 120px;"><span class="th-inner">佣金 <span class="sortArrow">↕</span></span></th>
+                <th class="accountHeaderSort" data-account-sort="commissionGmv" style="width: 130px;"><span class="th-inner">佣金GMV <span class="sortArrow">↕</span></span></th>
+                <th class="accountHeaderSort" data-account-sort="gmvCny" style="width: 130px;"><span class="th-inner">GMV人民币 <span class="sortArrow">↕</span></span></th>
+                <th class="accountHeaderSort" data-account-sort="commissionCny" style="width: 130px;"><span class="th-inner">佣金人民币 <span class="sortArrow">↕</span></span></th>
+                <th style="width: 150px;">前10视频</th>
+                <th style="width: 150px;">产品贡献</th>
+              </tr>
+            </thead>
+            <tbody id="accountRankTbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="videoRankPage" class="daily-wrap" style="display:none;">
+        <div class="row" style="align-items:center; justify-content:space-between;">
+          <h2 style="margin: 0;">视频排行</h2>
+        </div>
+        <div class="row">
+          <div class="field" style="min-width: 520px;">
+            <label>快捷日期</label>
+            <div class="chipbar" id="videoRankQuickDateBar">
+              <button type="button" class="chip active" data-video-rank-quick-date="all">全部</button>
+              <button type="button" class="chip" data-video-rank-quick-date="today">今天</button>
+              <button type="button" class="chip" data-video-rank-quick-date="yesterday">昨天</button>
+              <button type="button" class="chip" data-video-rank-quick-date="last7">过去一周</button>
+              <button type="button" class="chip" data-video-rank-quick-date="last30">过去一个月</button>
+            </div>
+          </div>
+          <div class="field"><label>Start date</label><input id="videoRankStartDate" type="date"/></div>
+          <div class="field"><label>End date</label><input id="videoRankEndDate" type="date"/></div>
+          <div class="field" style="min-width: 180px;"><label>账号</label><select id="videoRankAccountSelect"><option value="ALL">All</option></select></div>
+          <div class="field" style="min-width: 160px;"><label>拍剪员</label><select id="videoRankEditorSelect"><option value="ALL">All</option></select></div>
+          <div class="field" style="min-width: 160px;"><label>产品</label><select id="videoRankProductSelect"><option value="ALL">All</option></select></div>
+          <div class="field" style="min-width: 140px;"><label>国家</label><select id="videoRankCountrySelect"><option value="ALL">All</option></select></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 230px;">视频</th>
+                <th class="videoHeaderSort" data-video-sort="gmv" style="width: 130px;"><span class="th-inner">GMV <span class="sortArrow">↕</span></span></th>
+                <th class="videoHeaderSort" data-video-sort="orders" style="width: 120px;"><span class="th-inner">出单数量 <span class="sortArrow">↕</span></span></th>
+                <th class="videoHeaderSort" data-video-sort="commission" style="width: 120px;"><span class="th-inner">佣金 <span class="sortArrow">↕</span></span></th>
+                <th class="videoHeaderSort" data-video-sort="commissionGmv" style="width: 130px;"><span class="th-inner">佣金GMV <span class="sortArrow">↕</span></span></th>
+                <th class="videoHeaderSort" data-video-sort="gmvCny" style="width: 130px;"><span class="th-inner">GMV人民币 <span class="sortArrow">↕</span></span></th>
+                <th class="videoHeaderSort" data-video-sort="commissionCny" style="width: 130px;"><span class="th-inner">佣金人民币 <span class="sortArrow">↕</span></span></th>
+              </tr>
+            </thead>
+            <tbody id="videoRankTbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="comparePage" class="daily-wrap" style="display:none;">
+        <div class="row" style="align-items:center;">
+          <h2 style="margin: 0;">数据对比</h2>
+        </div>
+        <div class="row" style="align-items:center; justify-content:flex-start; gap:10px; margin-top:4px; margin-bottom:8px;">
+          <label style="font-size:12px; color:#666;">对比指标</label>
+          <select id="compareMetricSelect" style="min-width:150px;">
+            <option value="gmv">GMV (USD)</option>
+            <option value="commission">佣金 (USD)</option>
+            <option value="orders">出单数量</option>
+            <option value="gmvCny">GMV人民币</option>
+            <option value="commissionCny">佣金人民币</option>
+          </select>
+          <button id="addCompareConditionBtn" type="button">+ 增加对比组</button>
+          <button id="removeCompareConditionBtn" type="button">- 删除最后一组</button>
+        </div>
+        <div id="compareConditionsWrap"></div>
+
+        <div class="chart-card">
+          <div class="muted" style="margin-bottom:6px;">每日趋势对比（按筛选条件生成）</div>
+          <canvas id="compareTrendChart" height="100"></canvas>
         </div>
       </section>
     </main>
@@ -580,6 +797,36 @@
         <textarea id="dailyDataInput" class="textarea" spellcheck="false"></textarea>
         <div style="display:flex; gap:10px; margin-top:10px; align-items:center; flex-wrap:wrap;">
           <button id="loadDailyDataBtn" type="button">加载每日数据</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="peopleTop10ModalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="peopleTop10ModalTitle">人员前10视频</div>
+        <button class="close-x" id="closePeopleTop10ModalBtn" type="button">Close</button>
+      </div>
+      <div class="modal-body">
+        <div class="muted" id="peopleTop10ModalSubTitle" style="margin-bottom: 10px;"></div>
+        <div class="table-wrap">
+          <table class="top10-table">
+            <thead>
+              <tr>
+                <th style="width: 58px;">#</th>
+                <th style="width: 220px;">视频链接</th>
+                <th style="width: 120px;">日期</th>
+                <th style="width: 140px;">产品</th>
+                <th style="width: 120px;">账号</th>
+                <th style="width: 120px;">拍剪员</th>
+                <th style="width: 100px;">出单数量</th>
+                <th style="width: 110px;">GMV</th>
+                <th style="width: 110px;">佣金</th>
+              </tr>
+            </thead>
+            <tbody id="peopleTop10Tbody"></tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -736,6 +983,19 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
     let rows = parseTSV(DEFAULT_TSV_TEMPLATE);
     let dailyRows = [];
     let dailyExpanded = { date: null, mode: null };
+    let peopleExpandedEditors = new Set();
+    let accountRankExpanded = new Set();
+    let videoRankExpanded = new Set();
+    let dailyChartMode = 'usd';
+    let compareConditions = [];
+    let compareNextId = 1;
+    let compareMetric = 'gmv';
+    let peopleSortMetric = 'orders';
+    let peopleSortDir = 'desc';
+    let accountSortMetric = 'orders';
+    let accountSortDir = 'desc';
+    let videoSortMetric = 'orders';
+    let videoSortDir = 'desc';
     let dailySortMetric = 'date';
     let dailySortDir = 'desc';
     let expanded = new Set();
@@ -780,8 +1040,16 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
     const closeDataModalBtn = document.getElementById('closeDataModalBtn');
     const navDashboardBtn = document.getElementById('navDashboardBtn');
     const navBlankBtn = document.getElementById('navBlankBtn');
+    const navPeopleBtn = document.getElementById('navPeopleBtn');
+    const navAccountRankBtn = document.getElementById('navAccountRankBtn');
+    const navVideoRankBtn = document.getElementById('navVideoRankBtn');
+    const navCompareBtn = document.getElementById('navCompareBtn');
     const dashboardPageEl = document.getElementById('dashboardPage');
     const blankPageEl = document.getElementById('blankPage');
+    const peoplePageEl = document.getElementById('peoplePage');
+    const accountRankPageEl = document.getElementById('accountRankPage');
+    const videoRankPageEl = document.getElementById('videoRankPage');
+    const comparePageEl = document.getElementById('comparePage');
     const openDailyDataModalBtn = document.getElementById('openDailyDataModalBtn');
     const dailyDataModalOverlay = document.getElementById('dailyDataModalOverlay');
     const closeDailyDataModalBtn = document.getElementById('closeDailyDataModalBtn');
@@ -796,11 +1064,53 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
     const dailyProductSelectEl = document.getElementById('dailyProductSelect');
     const dailyCountrySelectEl = document.getElementById('dailyCountrySelect');
     const dailyTbodyEl = document.getElementById('dailyTbody');
-    const dailyTotalRowsEl = document.getElementById('dailyTotalRows');
     const dailyTotalGmvEl = document.getElementById('dailyTotalGmv');
+    const dailyTotalCommissionEl = document.getElementById('dailyTotalCommission');
+    const dailyTotalCommissionCnyEl = document.getElementById('dailyTotalCommissionCny');
     const dailyTotalOrdersEl = document.getElementById('dailyTotalOrders');
+    const dailyChartModeBarEl = document.getElementById('dailyChartModeBar');
+    const dailyUsdChartCardEl = document.getElementById('dailyUsdChartCard');
+    const dailyUsdChartContentEl = document.getElementById('dailyUsdChartContent');
     const dailyTrendChartEl = document.getElementById('dailyTrendChart');
+    const dailyTrendChartCnyEl = document.getElementById('dailyTrendChartCny');
+    const dailyCnyChartCardEl = document.getElementById('dailyCnyChartCard');
     let dailyTrendChart = null;
+    let dailyTrendChartCny = null;
+    let compareTrendChart = null;
+    const peopleQuickDateBarEl = document.getElementById('peopleQuickDateBar');
+    const peopleStartDateEl = document.getElementById('peopleStartDate');
+    const peopleEndDateEl = document.getElementById('peopleEndDate');
+    const peopleAccountSelectEl = document.getElementById('peopleAccountSelect');
+    const peopleEditorSelectEl = document.getElementById('peopleEditorSelect');
+    const peopleProductSelectEl = document.getElementById('peopleProductSelect');
+    const peopleCountrySelectEl = document.getElementById('peopleCountrySelect');
+    const peopleTbodyEl = document.getElementById('peopleTbody');
+    const peopleTop10ModalOverlayEl = document.getElementById('peopleTop10ModalOverlay');
+    const closePeopleTop10ModalBtn = document.getElementById('closePeopleTop10ModalBtn');
+    const peopleTop10ModalTitleEl = document.getElementById('peopleTop10ModalTitle');
+    const peopleTop10ModalSubTitleEl = document.getElementById('peopleTop10ModalSubTitle');
+    const peopleTop10TbodyEl = document.getElementById('peopleTop10Tbody');
+    const accountRankQuickDateBarEl = document.getElementById('accountRankQuickDateBar');
+    const accountRankStartDateEl = document.getElementById('accountRankStartDate');
+    const accountRankEndDateEl = document.getElementById('accountRankEndDate');
+    const accountRankAccountSelectEl = document.getElementById('accountRankAccountSelect');
+    const accountRankEditorSelectEl = document.getElementById('accountRankEditorSelect');
+    const accountRankProductSelectEl = document.getElementById('accountRankProductSelect');
+    const accountRankCountrySelectEl = document.getElementById('accountRankCountrySelect');
+    const accountRankTbodyEl = document.getElementById('accountRankTbody');
+    const videoRankQuickDateBarEl = document.getElementById('videoRankQuickDateBar');
+    const videoRankStartDateEl = document.getElementById('videoRankStartDate');
+    const videoRankEndDateEl = document.getElementById('videoRankEndDate');
+    const videoRankAccountSelectEl = document.getElementById('videoRankAccountSelect');
+    const videoRankEditorSelectEl = document.getElementById('videoRankEditorSelect');
+    const videoRankProductSelectEl = document.getElementById('videoRankProductSelect');
+    const videoRankCountrySelectEl = document.getElementById('videoRankCountrySelect');
+    const videoRankTbodyEl = document.getElementById('videoRankTbody');
+    const compareMetricSelectEl = document.getElementById('compareMetricSelect');
+    const addCompareConditionBtn = document.getElementById('addCompareConditionBtn');
+    const removeCompareConditionBtn = document.getElementById('removeCompareConditionBtn');
+    const compareConditionsWrapEl = document.getElementById('compareConditionsWrap');
+    const compareTrendChartEl = document.getElementById('compareTrendChart');
 
     function valueForMetricGroup(metric, g) {
       if (metric === 'gmv') return g.gmv ?? 0;
@@ -935,10 +1245,23 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
 
     function switchPage(page) {
       const showDashboard = page === 'dashboard';
+      const showDaily = page === 'blank';
+      const showPeople = page === 'people';
+      const showAccountRank = page === 'accountRank';
+      const showVideoRank = page === 'videoRank';
+      const showCompare = page === 'compare';
       if (dashboardPageEl) dashboardPageEl.style.display = showDashboard ? '' : 'none';
-      if (blankPageEl) blankPageEl.style.display = showDashboard ? 'none' : '';
+      if (blankPageEl) blankPageEl.style.display = showDaily ? '' : 'none';
+      if (peoplePageEl) peoplePageEl.style.display = showPeople ? '' : 'none';
+      if (accountRankPageEl) accountRankPageEl.style.display = showAccountRank ? '' : 'none';
+      if (videoRankPageEl) videoRankPageEl.style.display = showVideoRank ? '' : 'none';
+      if (comparePageEl) comparePageEl.style.display = showCompare ? '' : 'none';
       if (navDashboardBtn) navDashboardBtn.classList.toggle('active', showDashboard);
-      if (navBlankBtn) navBlankBtn.classList.toggle('active', !showDashboard);
+      if (navBlankBtn) navBlankBtn.classList.toggle('active', showDaily);
+      if (navPeopleBtn) navPeopleBtn.classList.toggle('active', showPeople);
+      if (navAccountRankBtn) navAccountRankBtn.classList.toggle('active', showAccountRank);
+      if (navVideoRankBtn) navVideoRankBtn.classList.toggle('active', showVideoRank);
+      if (navCompareBtn) navCompareBtn.classList.toggle('active', showCompare);
       closeProductPickerPopover();
     }
 
@@ -1393,9 +1716,12 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
 
       const totalOrders = dateRows.reduce((s, r) => s + r.orders, 0);
       const totalGmv = dateRows.reduce((s, r) => s + r.gmv, 0);
-      dailyTotalRowsEl.textContent = formatNumber(dateRows.length);
+      const totalCommission = dateRows.reduce((s, r) => s + r.commission, 0);
+      const totalCommissionCny = dateRows.reduce((s, r) => s + r.commissionCny, 0);
       dailyTotalOrdersEl.textContent = formatNumber(totalOrders);
       dailyTotalGmvEl.textContent = formatUsd(totalGmv);
+      dailyTotalCommissionEl.textContent = formatUsd(totalCommission);
+      dailyTotalCommissionCnyEl.textContent = formatCurrency(totalCommissionCny);
       if (updateChart) renderDailyTrendChart(filtered);
 
       dailyTbodyEl.querySelectorAll('.daily-expand-btn').forEach(btn => {
@@ -1450,6 +1776,41 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
           updateDailyHeaderArrows();
           dailyExpanded = { date: null, mode: null };
           renderDailyTable({ updateChart: false });
+        });
+      });
+    }
+
+    function comparePeopleRows(a, b) {
+      const va = a[peopleSortMetric] || 0;
+      const vb = b[peopleSortMetric] || 0;
+      if (va === vb) return 0;
+      return peopleSortDir === 'desc' ? (vb - va) : (va - vb);
+    }
+
+    function updatePeopleHeaderArrows() {
+      document.querySelectorAll('.peopleHeaderSort').forEach(th => {
+        const metric = th.getAttribute('data-people-sort');
+        const arrow = th.querySelector('.sortArrow');
+        if (!arrow) return;
+        const active = metric === peopleSortMetric;
+        th.classList.toggle('active', active);
+        arrow.textContent = active ? (peopleSortDir === 'desc' ? '▲' : '▼') : '↕';
+      });
+    }
+
+    function initPeopleHeaderSorting() {
+      document.querySelectorAll('.peopleHeaderSort').forEach(th => {
+        th.addEventListener('click', () => {
+          const metric = th.getAttribute('data-people-sort');
+          if (!metric) return;
+          if (peopleSortMetric === metric) peopleSortDir = peopleSortDir === 'desc' ? 'asc' : 'desc';
+          else {
+            peopleSortMetric = metric;
+            peopleSortDir = 'desc';
+          }
+          updatePeopleHeaderArrows();
+          peopleExpandedEditors = new Set();
+          renderPeopleRanking();
         });
       });
     }
@@ -1543,30 +1904,58 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
       `;
     }
 
-    function renderDailyTrendChart(filtered) {
-      if (!dailyTrendChartEl) return;
+    function buildDailyChartSeries(filtered) {
       const byDate = new Map();
       for (const r of filtered) {
         const key = r.dateStr;
-        if (!byDate.has(key)) byDate.set(key, { dateStr: key, gmv: 0, commission: 0, orders: 0, ts: r.dateObj ? r.dateObj.getTime() : 0 });
+        if (!byDate.has(key)) byDate.set(key, { dateStr: key, gmv: 0, commission: 0, gmvCny: 0, commissionCny: 0, orders: 0, ts: r.dateObj ? r.dateObj.getTime() : 0 });
         const a = byDate.get(key);
         a.gmv += r.gmv || 0;
         a.commission += r.commission || 0;
+        a.gmvCny += r.gmvCny || 0;
+        a.commissionCny += r.commissionCny || 0;
         a.orders += r.orders || 0;
       }
       const sorted = Array.from(byDate.values()).sort((a, b) => a.ts - b.ts);
-      const labels = sorted.map(x => x.dateStr);
-      const gmvData = sorted.map(x => Number((x.gmv || 0).toFixed(2)));
-      const commissionData = sorted.map(x => Number((x.commission || 0).toFixed(2)));
-      const ordersData = sorted.map(x => x.orders || 0);
+      return {
+        labels: sorted.map(x => x.dateStr),
+        gmvData: sorted.map(x => Number((x.gmv || 0).toFixed(2))),
+        commissionData: sorted.map(x => Number((x.commission || 0).toFixed(2))),
+        gmvCnyData: sorted.map(x => Number((x.gmvCny || 0).toFixed(2))),
+        commissionCnyData: sorted.map(x => Number((x.commissionCny || 0).toFixed(2))),
+        ordersData: sorted.map(x => x.orders || 0)
+      };
+    }
+
+    function setDailyChartModeActive(mode) {
+      if (!dailyChartModeBarEl) return;
+      dailyChartModeBarEl.querySelectorAll('.chip[data-daily-chart-mode]').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-daily-chart-mode') === mode);
+      });
+    }
+
+    function renderDailyTrendChart(filtered) {
+      if (!dailyTrendChartEl) return;
+      const series = buildDailyChartSeries(filtered);
+      const { labels, gmvData, commissionData, gmvCnyData, commissionCnyData, ordersData } = series;
+      const showUsd = dailyChartMode === 'usd' || dailyChartMode === 'both';
+      const showCny = dailyChartMode === 'cny' || dailyChartMode === 'both';
+
+      if (dailyUsdChartCardEl) dailyUsdChartCardEl.style.display = '';
+      if (dailyUsdChartContentEl) dailyUsdChartContentEl.style.display = showUsd ? '' : 'none';
+      if (dailyCnyChartCardEl) dailyCnyChartCardEl.style.display = showCny ? '' : 'none';
 
       if (dailyTrendChart) {
         dailyTrendChart.destroy();
         dailyTrendChart = null;
       }
+      if (dailyTrendChartCny) {
+        dailyTrendChartCny.destroy();
+        dailyTrendChartCny = null;
+      }
       if (typeof Chart === 'undefined') return;
 
-      dailyTrendChart = new Chart(dailyTrendChartEl.getContext('2d'), {
+      if (showUsd) dailyTrendChart = new Chart(dailyTrendChartEl.getContext('2d'), {
         type: 'line',
         data: {
           labels,
@@ -1646,6 +2035,684 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
           }
         }
       });
+
+      if (dailyTrendChartCnyEl && showCny) {
+        dailyTrendChartCny = new Chart(dailyTrendChartCnyEl.getContext('2d'), {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [
+              {
+                label: 'GMV人民币',
+                data: gmvCnyData,
+                yAxisID: 'yCny',
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37,99,235,0.15)',
+                tension: 0.25,
+                pointRadius: 2
+              },
+              {
+                label: '佣金人民币',
+                data: commissionCnyData,
+                yAxisID: 'yCny',
+                borderColor: '#dc2626',
+                backgroundColor: 'rgba(220,38,38,0.15)',
+                tension: 0.25,
+                pointRadius: 2
+              },
+              {
+                type: 'bar',
+                label: '出单数量',
+                data: ordersData,
+                yAxisID: 'yOrders',
+                borderColor: 'rgba(96,165,250,0.95)',
+                backgroundColor: 'rgba(96,165,250,0.28)',
+                borderWidth: 1,
+                barPercentage: 0.7,
+                categoryPercentage: 0.8
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+              x: { title: { display: true, text: '日期' } },
+              yCny: {
+                type: 'linear',
+                position: 'left',
+                title: { display: true, text: '人民币 (¥)' },
+                ticks: { callback: (v) => '¥' + Number(v).toLocaleString() }
+              },
+              yOrders: {
+                type: 'linear',
+                position: 'right',
+                title: { display: true, text: '单量' },
+                grid: { drawOnChartArea: false }
+              }
+            },
+            plugins: {
+              legend: { position: 'top' },
+              tooltip: {
+                mode: 'index',
+                intersect: false,
+                callbacks: {
+                  title: (items) => items && items.length ? `日期: ${items[0].label || ''}` : '',
+                  label: (ctx) => {
+                    const dsLabel = ctx.dataset?.label || '';
+                    const v = ctx.parsed?.y ?? 0;
+                    if (dsLabel.includes('GMV人民币')) return `GMV人民币: ${formatCurrency(v)}`;
+                    if (dsLabel.includes('佣金人民币')) return `佣金人民币: ${formatCurrency(v)}`;
+                    return `单量: ${formatNumber(v)}`;
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    function setPeopleQuickDateActive(keyOrNull) {
+      if (!peopleQuickDateBarEl) return;
+      peopleQuickDateBarEl.querySelectorAll('.chip[data-people-quick-date]').forEach(btn => {
+        const key = btn.getAttribute('data-people-quick-date');
+        btn.classList.toggle('active', !!keyOrNull && key === keyOrNull);
+      });
+    }
+
+    function applyPeopleQuickDate(key) {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      let start = null;
+      let end = null;
+      if (key === 'today') {
+        start = new Date(today); end = new Date(today);
+      } else if (key === 'yesterday') {
+        start = new Date(today); start.setDate(start.getDate() - 1);
+        end = new Date(start);
+      } else if (key === 'last7') {
+        end = new Date(today);
+        start = new Date(today); start.setDate(start.getDate() - 6);
+      } else if (key === 'last30') {
+        end = new Date(today);
+        start = new Date(today); start.setDate(start.getDate() - 29);
+      }
+      peopleStartDateEl.value = start ? toDateInputValue(start) : '';
+      peopleEndDateEl.value = end ? toDateInputValue(end) : '';
+      setPeopleQuickDateActive(key);
+      peopleExpandedEditors = new Set();
+      renderPeopleRanking();
+    }
+
+    function populatePeopleFilters() {
+      upsertSelectOptions(peopleAccountSelectEl, Array.from(new Set(dailyRows.map(r => r.account).filter(Boolean))));
+      upsertSelectOptions(peopleEditorSelectEl, Array.from(new Set(dailyRows.map(r => r.editor).filter(Boolean))));
+      upsertSelectOptions(peopleProductSelectEl, Array.from(new Set(dailyRows.map(r => r.product).filter(Boolean))));
+      upsertSelectOptions(peopleCountrySelectEl, Array.from(new Set(dailyRows.map(r => r.country).filter(Boolean))));
+    }
+
+    function initPeopleDateRange() {
+      if (!dailyRows.length) return;
+      const times = dailyRows.map(r => r.dateObj?.getTime?.() || NaN).filter(n => !Number.isNaN(n));
+      if (!times.length) return;
+      const minD = new Date(Math.min(...times));
+      const maxD = new Date(Math.max(...times));
+      peopleStartDateEl.value = toDateInputValue(minD);
+      peopleEndDateEl.value = toDateInputValue(maxD);
+    }
+
+    function filteredPeopleRows() {
+      const start = peopleStartDateEl.value ? new Date(peopleStartDateEl.value + 'T00:00:00') : null;
+      const end = peopleEndDateEl.value ? new Date(peopleEndDateEl.value + 'T23:59:59') : null;
+      const account = peopleAccountSelectEl.value;
+      const editor = peopleEditorSelectEl.value;
+      const product = peopleProductSelectEl.value;
+      const country = peopleCountrySelectEl.value;
+      return dailyRows.filter(r => {
+        if (start && r.dateObj < start) return false;
+        if (end && r.dateObj > end) return false;
+        if (account !== 'ALL' && r.account !== account) return false;
+        if (editor !== 'ALL' && r.editor !== editor) return false;
+        if (product !== 'ALL' && r.product !== product) return false;
+        if (country !== 'ALL' && r.country !== country) return false;
+        return true;
+      });
+    }
+
+    function bestDailyVideoRows(list, limit = 10) {
+      return list
+        .filter(r => (r.orders || 0) > 0)
+        .sort((a, b) => (b.orders - a.orders) || (b.gmv - a.gmv) || (b.commission - a.commission))
+        .slice(0, limit);
+    }
+
+    function openPeopleTop10Modal({ editor, product }) {
+      if (!peopleTop10ModalOverlayEl) return;
+      const filtered = filteredPeopleRows();
+      const list = filtered.filter(r => r.editor === editor && (!product || r.product === product));
+      const topRows = bestDailyVideoRows(list, 10);
+      peopleTop10ModalTitleEl.textContent = product ? '产品前10视频' : '人员前10视频';
+      peopleTop10ModalSubTitleEl.textContent = product
+        ? `人员: ${editor} · 产品: ${product} · 排序: 出单数量降序`
+        : `人员: ${editor} · 排序: 出单数量降序`;
+      peopleTop10TbodyEl.innerHTML = topRows.map((r, i) => {
+        const text = `${r.product || '未知产品'}-${r.account || '未知账号'}-${r.editor || '未知拍剪员'}`;
+        const linkHtml = r.videoUrl
+          ? `<a href="${escapeHtml(r.videoUrl)}" target="_blank" rel="noreferrer" class="btn-link" style="text-decoration:none;">${escapeHtml(text)}</a>`
+          : `<span class="muted">${escapeHtml(text)}</span>`;
+        return `
+          <tr>
+            <td><span class="modalNum">${i + 1}</span></td>
+            <td>${linkHtml}</td>
+            <td>${escapeHtml(r.dateStr || '')}</td>
+            <td>${escapeHtml(r.product || '')}</td>
+            <td>${escapeHtml(r.account || '')}</td>
+            <td>${escapeHtml(r.editor || '')}</td>
+            <td><span class="modalNum">${formatNumber(r.orders || 0)}</span></td>
+            <td><span class="modalNum">${formatUsd(r.gmv || 0)}</span></td>
+            <td><span class="modalNum">${formatUsd(r.commission || 0)}</span></td>
+          </tr>
+        `;
+      }).join('') || '<tr><td colspan="9" class="muted">无数据</td></tr>';
+      peopleTop10ModalOverlayEl.style.display = 'flex';
+    }
+
+    function renderPeopleRanking() {
+      if (!peopleTbodyEl) return;
+      const filtered = filteredPeopleRows();
+      const map = new Map();
+      for (const r of filtered) {
+        const key = r.editor || '未知';
+        if (!map.has(key)) map.set(key, { editor: key, gmv: 0, orders: 0, commission: 0, commissionGmv: 0, gmvCny: 0, commissionCny: 0 });
+        const a = map.get(key);
+        a.gmv += r.gmv || 0;
+        a.orders += r.orders || 0;
+        a.commission += r.commission || 0;
+        a.commissionGmv += r.commissionGmv || 0;
+        a.gmvCny += r.gmvCny || 0;
+        a.commissionCny += r.commissionCny || 0;
+      }
+      const people = Array.from(map.values()).sort((a, b) => comparePeopleRows(a, b));
+      const html = [];
+      for (const p of people) {
+        const editorKey = encodeURIComponent(p.editor);
+        const isExpanded = peopleExpandedEditors.has(p.editor);
+        html.push(`
+          <tr>
+            <td style="text-align:left;">${escapeHtml(p.editor)}</td>
+            <td class="numCell"><span class="numWrap">${formatUsd(p.gmv)}</span></td>
+            <td class="numCell"><span class="numWrap">${formatNumber(p.orders)}</span></td>
+            <td class="numCell"><span class="numWrap">${formatUsd(p.commission)}</span></td>
+            <td class="numCell"><span class="numWrap">${formatUsd(p.commissionGmv)}</span></td>
+            <td class="numCell"><span class="numWrap">${formatCurrency(p.gmvCny)}</span></td>
+            <td class="numCell"><span class="numWrap">${formatCurrency(p.commissionCny)}</span></td>
+            <td><button type="button" class="btn-link peopleTop10Btn" data-editor="${editorKey}">前10视频</button></td>
+            <td><button type="button" class="btn-link peopleExpandBtn" data-editor="${editorKey}">${isExpanded ? '收起' : '展开'}产品贡献</button></td>
+          </tr>
+        `);
+
+        if (isExpanded) {
+          const productsMap = new Map();
+          filtered.filter(r => (r.editor || '未知') === p.editor).forEach(r => {
+            const pk = r.product || '未知';
+            if (!productsMap.has(pk)) productsMap.set(pk, { product: pk, gmv: 0, orders: 0, commission: 0, commissionGmv: 0, gmvCny: 0, commissionCny: 0 });
+            const a = productsMap.get(pk);
+            a.gmv += r.gmv || 0;
+            a.orders += r.orders || 0;
+            a.commission += r.commission || 0;
+            a.commissionGmv += r.commissionGmv || 0;
+            a.gmvCny += r.gmvCny || 0;
+            a.commissionCny += r.commissionCny || 0;
+          });
+          const prodRows = Array.from(productsMap.values()).sort((a, b) => (b.orders - a.orders) || (b.gmv - a.gmv));
+          const subHtml = prodRows.map(pr => `
+            <tr>
+              <td style="text-align:left;">${escapeHtml(pr.product)}</td>
+              <td class="numCell"><span class="numWrap">${formatUsd(pr.gmv)}</span></td>
+              <td class="numCell"><span class="numWrap">${formatNumber(pr.orders)}</span></td>
+              <td class="numCell"><span class="numWrap">${formatUsd(pr.commission)}</span></td>
+              <td class="numCell"><span class="numWrap">${formatUsd(pr.commissionGmv)}</span></td>
+              <td class="numCell"><span class="numWrap">${formatCurrency(pr.gmvCny)}</span></td>
+              <td class="numCell"><span class="numWrap">${formatCurrency(pr.commissionCny)}</span></td>
+              <td><button type="button" class="btn-link peopleProductTop10Btn" data-editor="${editorKey}" data-product="${encodeURIComponent(pr.product)}">产品前10视频</button></td>
+            </tr>
+          `).join('');
+          html.push(`
+            <tr class="daily-subrow">
+              <td colspan="9">
+                <div class="sub-wrap">
+                  <div style="font-weight:700; margin-bottom:8px; text-align:left;">${escapeHtml(p.editor)} 的产品贡献</div>
+                  <div class="table-wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th style="text-align:left;">产品</th>
+                          <th>GMV</th>
+                          <th>出单数量</th>
+                          <th>佣金</th>
+                          <th>佣金GMV</th>
+                          <th>GMV人民币</th>
+                          <th>佣金人民币</th>
+                          <th>前10视频</th>
+                        </tr>
+                      </thead>
+                      <tbody>${subHtml || '<tr><td colspan="8" class="muted">无数据</td></tr>'}</tbody>
+                    </table>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          `);
+        }
+      }
+      peopleTbodyEl.innerHTML = html.join('') || '<tr><td colspan="9" class="muted">无数据</td></tr>';
+
+      peopleTbodyEl.querySelectorAll('.peopleExpandBtn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const editor = decodeURIComponent(btn.getAttribute('data-editor') || '');
+          if (!editor) return;
+          if (peopleExpandedEditors.has(editor)) peopleExpandedEditors.delete(editor);
+          else peopleExpandedEditors.add(editor);
+          renderPeopleRanking();
+        });
+      });
+      peopleTbodyEl.querySelectorAll('.peopleTop10Btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const editor = decodeURIComponent(btn.getAttribute('data-editor') || '');
+          if (!editor) return;
+          openPeopleTop10Modal({ editor, product: null });
+        });
+      });
+      peopleTbodyEl.querySelectorAll('.peopleProductTop10Btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const editor = decodeURIComponent(btn.getAttribute('data-editor') || '');
+          const product = decodeURIComponent(btn.getAttribute('data-product') || '');
+          if (!editor || !product) return;
+          openPeopleTop10Modal({ editor, product });
+        });
+      });
+    }
+
+    function compareAccountRows(a, b) {
+      const va = a[accountSortMetric] || 0;
+      const vb = b[accountSortMetric] || 0;
+      if (va === vb) return 0;
+      return accountSortDir === 'desc' ? (vb - va) : (va - vb);
+    }
+
+    function updateAccountHeaderArrows() {
+      document.querySelectorAll('.accountHeaderSort').forEach(th => {
+        const metric = th.getAttribute('data-account-sort');
+        const arrow = th.querySelector('.sortArrow');
+        if (!arrow) return;
+        const active = metric === accountSortMetric;
+        th.classList.toggle('active', active);
+        arrow.textContent = active ? (accountSortDir === 'desc' ? '▲' : '▼') : '↕';
+      });
+    }
+
+    function initAccountHeaderSorting() {
+      document.querySelectorAll('.accountHeaderSort').forEach(th => {
+        th.addEventListener('click', () => {
+          const metric = th.getAttribute('data-account-sort');
+          if (!metric) return;
+          if (accountSortMetric === metric) accountSortDir = accountSortDir === 'desc' ? 'asc' : 'desc';
+          else { accountSortMetric = metric; accountSortDir = 'desc'; }
+          updateAccountHeaderArrows();
+          accountRankExpanded = new Set();
+          renderAccountRanking();
+        });
+      });
+    }
+
+    function compareVideoRows(a, b) {
+      const va = a[videoSortMetric] || 0;
+      const vb = b[videoSortMetric] || 0;
+      if (va === vb) return 0;
+      return videoSortDir === 'desc' ? (vb - va) : (va - vb);
+    }
+
+    function updateVideoHeaderArrows() {
+      document.querySelectorAll('.videoHeaderSort').forEach(th => {
+        const metric = th.getAttribute('data-video-sort');
+        const arrow = th.querySelector('.sortArrow');
+        if (!arrow) return;
+        const active = metric === videoSortMetric;
+        th.classList.toggle('active', active);
+        arrow.textContent = active ? (videoSortDir === 'desc' ? '▲' : '▼') : '↕';
+      });
+    }
+
+    function initVideoHeaderSorting() {
+      document.querySelectorAll('.videoHeaderSort').forEach(th => {
+        th.addEventListener('click', () => {
+          const metric = th.getAttribute('data-video-sort');
+          if (!metric) return;
+          if (videoSortMetric === metric) videoSortDir = videoSortDir === 'desc' ? 'asc' : 'desc';
+          else { videoSortMetric = metric; videoSortDir = 'desc'; }
+          updateVideoHeaderArrows();
+          videoRankExpanded = new Set();
+          renderVideoRanking();
+        });
+      });
+    }
+
+    function setQuickDateToRange(key, startEl, endEl, setActiveFn, rerenderFn) {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      let start = null;
+      let end = null;
+      if (key === 'today') { start = new Date(today); end = new Date(today); }
+      else if (key === 'yesterday') { start = new Date(today); start.setDate(start.getDate() - 1); end = new Date(start); }
+      else if (key === 'last7') { end = new Date(today); start = new Date(today); start.setDate(start.getDate() - 6); }
+      else if (key === 'last30') { end = new Date(today); start = new Date(today); start.setDate(start.getDate() - 29); }
+      startEl.value = start ? toDateInputValue(start) : '';
+      endEl.value = end ? toDateInputValue(end) : '';
+      setActiveFn(key);
+      rerenderFn();
+    }
+
+    function setAccountRankQuickDateActive(keyOrNull) {
+      if (!accountRankQuickDateBarEl) return;
+      accountRankQuickDateBarEl.querySelectorAll('.chip[data-account-rank-quick-date]').forEach(btn => {
+        btn.classList.toggle('active', !!keyOrNull && btn.getAttribute('data-account-rank-quick-date') === keyOrNull);
+      });
+    }
+
+    function setVideoRankQuickDateActive(keyOrNull) {
+      if (!videoRankQuickDateBarEl) return;
+      videoRankQuickDateBarEl.querySelectorAll('.chip[data-video-rank-quick-date]').forEach(btn => {
+        btn.classList.toggle('active', !!keyOrNull && btn.getAttribute('data-video-rank-quick-date') === keyOrNull);
+      });
+    }
+
+    function populateAccountRankFilters() {
+      upsertSelectOptions(accountRankAccountSelectEl, Array.from(new Set(dailyRows.map(r => r.account).filter(Boolean))));
+      upsertSelectOptions(accountRankEditorSelectEl, Array.from(new Set(dailyRows.map(r => r.editor).filter(Boolean))));
+      upsertSelectOptions(accountRankProductSelectEl, Array.from(new Set(dailyRows.map(r => r.product).filter(Boolean))));
+      upsertSelectOptions(accountRankCountrySelectEl, Array.from(new Set(dailyRows.map(r => r.country).filter(Boolean))));
+    }
+
+    function populateVideoRankFilters() {
+      upsertSelectOptions(videoRankAccountSelectEl, Array.from(new Set(dailyRows.map(r => r.account).filter(Boolean))));
+      upsertSelectOptions(videoRankEditorSelectEl, Array.from(new Set(dailyRows.map(r => r.editor).filter(Boolean))));
+      upsertSelectOptions(videoRankProductSelectEl, Array.from(new Set(dailyRows.map(r => r.product).filter(Boolean))));
+      upsertSelectOptions(videoRankCountrySelectEl, Array.from(new Set(dailyRows.map(r => r.country).filter(Boolean))));
+    }
+
+    function initRangeFromDailyRows(startEl, endEl) {
+      if (!dailyRows.length) return;
+      const times = dailyRows.map(r => r.dateObj?.getTime?.() || NaN).filter(n => !Number.isNaN(n));
+      if (!times.length) return;
+      startEl.value = toDateInputValue(new Date(Math.min(...times)));
+      endEl.value = toDateInputValue(new Date(Math.max(...times)));
+    }
+
+    function filterDailyByControls(startEl, endEl, accountEl, editorEl, productEl, countryEl) {
+      const start = startEl.value ? new Date(startEl.value + 'T00:00:00') : null;
+      const end = endEl.value ? new Date(endEl.value + 'T23:59:59') : null;
+      const account = accountEl.value;
+      const editor = editorEl.value;
+      const product = productEl.value;
+      const country = countryEl.value;
+      return dailyRows.filter(r => {
+        if (start && r.dateObj < start) return false;
+        if (end && r.dateObj > end) return false;
+        if (account !== 'ALL' && r.account !== account) return false;
+        if (editor !== 'ALL' && r.editor !== editor) return false;
+        if (product !== 'ALL' && r.product !== product) return false;
+        if (country !== 'ALL' && r.country !== country) return false;
+        return true;
+      });
+    }
+
+    function filteredAccountRankRows() {
+      return filterDailyByControls(accountRankStartDateEl, accountRankEndDateEl, accountRankAccountSelectEl, accountRankEditorSelectEl, accountRankProductSelectEl, accountRankCountrySelectEl);
+    }
+
+    function filteredVideoRankRows() {
+      return filterDailyByControls(videoRankStartDateEl, videoRankEndDateEl, videoRankAccountSelectEl, videoRankEditorSelectEl, videoRankProductSelectEl, videoRankCountrySelectEl);
+    }
+
+    function openEntityTop10Modal({ mode, value, product }) {
+      const filtered = mode === 'account' ? filteredAccountRankRows() : filteredVideoRankRows();
+      const list = filtered.filter(r => {
+        const matched = mode === 'account' ? r.account === value : ((r.videoUrl || `${r.product || ''}-${r.account || ''}-${r.editor || ''}`) === value);
+        if (!matched) return false;
+        if (product && r.product !== product) return false;
+        return true;
+      });
+      const topRows = bestDailyVideoRows(list, 10);
+      peopleTop10ModalTitleEl.textContent = product ? '产品前10视频' : '前10视频';
+      peopleTop10ModalSubTitleEl.textContent = product ? `主体: ${value} · 产品: ${product}` : `主体: ${value}`;
+      peopleTop10TbodyEl.innerHTML = topRows.map((r, i) => {
+        const text = `${r.product || '未知产品'}-${r.account || '未知账号'}-${r.editor || '未知拍剪员'}`;
+        const linkHtml = r.videoUrl
+          ? `<a href="${escapeHtml(r.videoUrl)}" target="_blank" rel="noreferrer" class="btn-link" style="text-decoration:none;">${escapeHtml(text)}</a>`
+          : `<span class="muted">${escapeHtml(text)}</span>`;
+        return `<tr>
+          <td><span class="modalNum">${i + 1}</span></td><td>${linkHtml}</td><td>${escapeHtml(r.dateStr || '')}</td>
+          <td>${escapeHtml(r.product || '')}</td><td>${escapeHtml(r.account || '')}</td><td>${escapeHtml(r.editor || '')}</td>
+          <td><span class="modalNum">${formatNumber(r.orders || 0)}</span></td>
+          <td><span class="modalNum">${formatUsd(r.gmv || 0)}</span></td>
+          <td><span class="modalNum">${formatUsd(r.commission || 0)}</span></td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="9" class="muted">无数据</td></tr>';
+      peopleTop10ModalOverlayEl.style.display = 'flex';
+    }
+
+    function renderAccountRanking() {
+      if (!accountRankTbodyEl) return;
+      const filtered = filteredAccountRankRows();
+      const map = new Map();
+      for (const r of filtered) {
+        const key = r.account || '未知';
+        if (!map.has(key)) map.set(key, { account: key, gmv: 0, orders: 0, commission: 0, commissionGmv: 0, gmvCny: 0, commissionCny: 0 });
+        const a = map.get(key);
+        a.gmv += r.gmv || 0; a.orders += r.orders || 0; a.commission += r.commission || 0; a.commissionGmv += r.commissionGmv || 0; a.gmvCny += r.gmvCny || 0; a.commissionCny += r.commissionCny || 0;
+      }
+      const list = Array.from(map.values()).filter(x => (x.orders || 0) > 0).sort((a, b) => compareAccountRows(a, b));
+      const html = [];
+      for (const x of list) {
+        const key = encodeURIComponent(x.account);
+        const ex = accountRankExpanded.has(x.account);
+        html.push(`<tr>
+          <td style="text-align:left;">${escapeHtml(x.account)}</td>
+          <td class="numCell"><span class="numWrap">${formatUsd(x.gmv)}</span></td>
+          <td class="numCell"><span class="numWrap">${formatNumber(x.orders)}</span></td>
+          <td class="numCell"><span class="numWrap">${formatUsd(x.commission)}</span></td>
+          <td class="numCell"><span class="numWrap">${formatUsd(x.commissionGmv)}</span></td>
+          <td class="numCell"><span class="numWrap">${formatCurrency(x.gmvCny)}</span></td>
+          <td class="numCell"><span class="numWrap">${formatCurrency(x.commissionCny)}</span></td>
+          <td><button type="button" class="btn-link accountTop10Btn" data-account="${key}">前10视频</button></td>
+          <td><button type="button" class="btn-link accountExpandBtn" data-account="${key}">${ex ? '收起' : '展开'}产品贡献</button></td>
+        </tr>`);
+        if (ex) {
+          const pmap = new Map();
+          filtered.filter(r => (r.account || '未知') === x.account).forEach(r => {
+            const pk = r.product || '未知';
+            if (!pmap.has(pk)) pmap.set(pk, { product: pk, gmv: 0, orders: 0, commission: 0, commissionGmv: 0, gmvCny: 0, commissionCny: 0 });
+            const a = pmap.get(pk);
+            a.gmv += r.gmv || 0; a.orders += r.orders || 0; a.commission += r.commission || 0; a.commissionGmv += r.commissionGmv || 0; a.gmvCny += r.gmvCny || 0; a.commissionCny += r.commissionCny || 0;
+          });
+          const sub = Array.from(pmap.values()).sort((a, b) => (b.orders - a.orders) || (b.gmv - a.gmv)).map(pr => `<tr>
+            <td style="text-align:left;">${escapeHtml(pr.product)}</td><td class="numCell"><span class="numWrap">${formatUsd(pr.gmv)}</span></td>
+            <td class="numCell"><span class="numWrap">${formatNumber(pr.orders)}</span></td><td class="numCell"><span class="numWrap">${formatUsd(pr.commission)}</span></td>
+            <td class="numCell"><span class="numWrap">${formatUsd(pr.commissionGmv)}</span></td><td class="numCell"><span class="numWrap">${formatCurrency(pr.gmvCny)}</span></td>
+            <td class="numCell"><span class="numWrap">${formatCurrency(pr.commissionCny)}</span></td>
+            <td><button type="button" class="btn-link accountProductTop10Btn" data-account="${key}" data-product="${encodeURIComponent(pr.product)}">产品前10视频</button></td></tr>`).join('');
+          html.push(`<tr class="daily-subrow"><td colspan="9"><div class="sub-wrap"><div style="font-weight:700; margin-bottom:8px; text-align:left;">${escapeHtml(x.account)} 的产品贡献</div><div class="table-wrap"><table><thead><tr>
+            <th style="text-align:left;">产品</th><th>GMV</th><th>出单数量</th><th>佣金</th><th>佣金GMV</th><th>GMV人民币</th><th>佣金人民币</th><th>前10视频</th>
+          </tr></thead><tbody>${sub || '<tr><td colspan="8" class="muted">无数据</td></tr>'}</tbody></table></div></div></td></tr>`);
+        }
+      }
+      accountRankTbodyEl.innerHTML = html.join('') || '<tr><td colspan="9" class="muted">无数据</td></tr>';
+      accountRankTbodyEl.querySelectorAll('.accountExpandBtn').forEach(btn => btn.addEventListener('click', () => {
+        const key = decodeURIComponent(btn.getAttribute('data-account') || ''); if (!key) return;
+        if (accountRankExpanded.has(key)) accountRankExpanded.delete(key); else accountRankExpanded.add(key);
+        renderAccountRanking();
+      }));
+      accountRankTbodyEl.querySelectorAll('.accountTop10Btn').forEach(btn => btn.addEventListener('click', () => {
+        const key = decodeURIComponent(btn.getAttribute('data-account') || ''); if (!key) return;
+        openEntityTop10Modal({ mode: 'account', value: key, product: null });
+      }));
+      accountRankTbodyEl.querySelectorAll('.accountProductTop10Btn').forEach(btn => btn.addEventListener('click', () => {
+        const key = decodeURIComponent(btn.getAttribute('data-account') || '');
+        const product = decodeURIComponent(btn.getAttribute('data-product') || '');
+        if (!key || !product) return;
+        openEntityTop10Modal({ mode: 'account', value: key, product });
+      }));
+    }
+
+    function renderVideoRanking() {
+      if (!videoRankTbodyEl) return;
+      const filtered = filteredVideoRankRows();
+      const map = new Map();
+      for (const r of filtered) {
+        if (!(r.orders > 0)) continue;
+        const key = r.videoUrl || `${r.product || '未知产品'}-${r.account || '未知账号'}-${r.editor || '未知拍剪员'}`;
+        if (!map.has(key)) map.set(key, { videoKey: key, videoUrl: r.videoUrl || '', label: `${r.product || '未知产品'}-${r.account || '未知账号'}-${r.editor || '未知拍剪员'}`, gmv: 0, orders: 0, commission: 0, commissionGmv: 0, gmvCny: 0, commissionCny: 0 });
+        const a = map.get(key);
+        a.gmv += r.gmv || 0; a.orders += r.orders || 0; a.commission += r.commission || 0; a.commissionGmv += r.commissionGmv || 0; a.gmvCny += r.gmvCny || 0; a.commissionCny += r.commissionCny || 0;
+      }
+      const list = Array.from(map.values()).sort((a, b) => compareVideoRows(a, b));
+      const html = list.map(x => {
+        const labelHtml = x.videoUrl
+          ? `<a href="${escapeHtml(x.videoUrl)}" target="_blank" rel="noreferrer" class="btn-link" style="text-decoration:none; white-space:nowrap;">${escapeHtml(x.label)}</a>`
+          : `<span style="white-space:nowrap;">${escapeHtml(x.label)}</span>`;
+        return `<tr>
+          <td style="text-align:left;">${labelHtml}</td>
+          <td class="numCell"><span class="numWrap">${formatUsd(x.gmv)}</span></td>
+          <td class="numCell"><span class="numWrap">${formatNumber(x.orders)}</span></td>
+          <td class="numCell"><span class="numWrap">${formatUsd(x.commission)}</span></td>
+          <td class="numCell"><span class="numWrap">${formatUsd(x.commissionGmv)}</span></td>
+          <td class="numCell"><span class="numWrap">${formatCurrency(x.gmvCny)}</span></td>
+          <td class="numCell"><span class="numWrap">${formatCurrency(x.commissionCny)}</span></td>
+        </tr>`;
+      });
+      videoRankTbodyEl.innerHTML = html.join('') || '<tr><td colspan="7" class="muted">无数据</td></tr>';
+    }
+
+    function getDailyRange() {
+      const times = dailyRows.map(r => r.dateObj?.getTime?.() || NaN).filter(n => !Number.isNaN(n));
+      if (!times.length) return { start: '', end: '' };
+      return {
+        start: toDateInputValue(new Date(Math.min(...times))),
+        end: toDateInputValue(new Date(Math.max(...times)))
+      };
+    }
+
+    function newCompareCondition() {
+      const range = getDailyRange();
+      return {
+        id: compareNextId++,
+        name: `对比${compareNextId - 1}`,
+        startDate: range.start,
+        endDate: range.end,
+        account: 'ALL',
+        editor: 'ALL',
+        product: 'ALL',
+        country: 'ALL',
+        deviceKeyword: ''
+      };
+    }
+
+    function buildSelectOptions(values, selected) {
+      const opts = ['<option value="ALL">All</option>'];
+      values.forEach(v => {
+        opts.push(`<option value="${escapeHtml(v)}" ${v === selected ? 'selected' : ''}>${escapeHtml(v)}</option>`);
+      });
+      return opts.join('');
+    }
+
+    function renderCompareConditionsUI() {
+      if (!compareConditionsWrapEl) return;
+      const accounts = Array.from(new Set(dailyRows.map(r => r.account).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'zh-Hans'));
+      const editors = Array.from(new Set(dailyRows.map(r => r.editor).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'zh-Hans'));
+      const products = Array.from(new Set(dailyRows.map(r => r.product).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'zh-Hans'));
+      const countries = Array.from(new Set(dailyRows.map(r => r.country).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'zh-Hans'));
+      compareConditionsWrapEl.innerHTML = compareConditions.map(c => `
+        <div class="compare-row" data-cmp-id="${c.id}">
+          <div class="row" style="align-items:center;">
+            <div class="field" style="min-width:130px;"><label>名称</label><input data-field="name" value="${escapeHtml(c.name)}"/></div>
+            <div class="field"><label>Start</label><input data-field="startDate" type="date" value="${escapeHtml(c.startDate)}"/></div>
+            <div class="field"><label>End</label><input data-field="endDate" type="date" value="${escapeHtml(c.endDate)}"/></div>
+            <div class="field" style="min-width:160px;"><label>账号</label><select data-field="account">${buildSelectOptions(accounts, c.account)}</select></div>
+            <div class="field" style="min-width:150px;"><label>拍剪员</label><select data-field="editor">${buildSelectOptions(editors, c.editor)}</select></div>
+            <div class="field" style="min-width:150px;"><label>产品</label><select data-field="product">${buildSelectOptions(products, c.product)}</select></div>
+            <div class="field" style="min-width:130px;"><label>国家</label><select data-field="country">${buildSelectOptions(countries, c.country)}</select></div>
+            <div class="field" style="min-width:150px;"><label>设备关键词</label><input data-field="deviceKeyword" value="${escapeHtml(c.deviceKeyword)}" placeholder="匹配账号字段"/></div>
+            <div class="field"><label>&nbsp;</label><button type="button" data-remove-id="${c.id}" ${compareConditions.length <= 1 ? 'disabled' : ''}>- 删除</button></div>
+          </div>
+        </div>
+      `).join('');
+      if (removeCompareConditionBtn) removeCompareConditionBtn.disabled = compareConditions.length <= 1;
+    }
+
+    function rowsForCompareCondition(c) {
+      const start = c.startDate ? new Date(c.startDate + 'T00:00:00') : null;
+      const end = c.endDate ? new Date(c.endDate + 'T23:59:59') : null;
+      const kw = (c.deviceKeyword || '').trim().toLowerCase();
+      return dailyRows.filter(r => {
+        if (start && r.dateObj < start) return false;
+        if (end && r.dateObj > end) return false;
+        if (c.account !== 'ALL' && r.account !== c.account) return false;
+        if (c.editor !== 'ALL' && r.editor !== c.editor) return false;
+        if (c.product !== 'ALL' && r.product !== c.product) return false;
+        if (c.country !== 'ALL' && r.country !== c.country) return false;
+        if (kw && !(r.account || '').toLowerCase().includes(kw)) return false;
+        return true;
+      });
+    }
+
+    function metricValue(r, metric) {
+      if (metric === 'orders') return r.orders || 0;
+      if (metric === 'commission') return r.commission || 0;
+      if (metric === 'gmvCny') return r.gmvCny || 0;
+      if (metric === 'commissionCny') return r.commissionCny || 0;
+      return r.gmv || 0;
+    }
+
+    function renderCompareChart() {
+      if (!compareTrendChartEl || typeof Chart === 'undefined') return;
+      if (compareTrendChart) { compareTrendChart.destroy(); compareTrendChart = null; }
+      const seriesList = compareConditions.map(c => {
+        const rows = rowsForCompareCondition(c);
+        const map = new Map();
+        rows.forEach(r => map.set(r.dateStr, (map.get(r.dateStr) || 0) + metricValue(r, compareMetric)));
+        return { name: c.name || `对比${c.id}`, map };
+      });
+      const allDates = Array.from(new Set(dailyRows.map(r => r.dateStr))).sort((a, b) => parseDailyDateFlexible(a) - parseDailyDateFlexible(b));
+      const colors = ['#2563eb', '#dc2626', '#16a34a', '#7c3aed', '#ea580c', '#0891b2', '#be185d', '#4f46e5'];
+      const datasets = seriesList.map((s, i) => ({
+        label: s.name,
+        data: allDates.map(d => Number((s.map.get(d) || 0).toFixed(2))),
+        borderColor: colors[i % colors.length],
+        backgroundColor: colors[i % colors.length] + '33',
+        tension: 0.25,
+        pointRadius: 2
+      }));
+      const yTitle = compareMetric === 'orders' ? '出单数量' : (compareMetric === 'gmvCny' || compareMetric === 'commissionCny' ? '人民币 (¥)' : '美元 ($)');
+      compareTrendChart = new Chart(compareTrendChartEl.getContext('2d'), {
+        type: 'line',
+        data: { labels: allDates, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          scales: {
+            x: { title: { display: true, text: '日期' } },
+            y: { title: { display: true, text: yTitle } }
+          },
+          plugins: { legend: { position: 'top' } }
+        }
+      });
+    }
+
+    function ensureCompareConditions() {
+      if (!compareConditions.length) compareConditions = [newCompareCondition()];
     }
 
     function setDailyDataFromTsv(tsv) {
@@ -1654,7 +2721,19 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
         dailyRows = parsed;
         populateDailyFilters();
         initDailyDateRange();
+        populatePeopleFilters();
+        initPeopleDateRange();
+        populateAccountRankFilters();
+        populateVideoRankFilters();
+        initRangeFromDailyRows(accountRankStartDateEl, accountRankEndDateEl);
+        initRangeFromDailyRows(videoRankStartDateEl, videoRankEndDateEl);
+        ensureCompareConditions();
+        renderCompareConditionsUI();
+        renderCompareChart();
         renderDailyTable();
+        renderPeopleRanking();
+        renderAccountRanking();
+        renderVideoRanking();
         dailyDataMsgEl.textContent = `每日数据已加载：${dailyRows.length} 条`;
         dailyDataMsgEl.className = 'msg';
         return true;
@@ -1780,6 +2859,10 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
     }
     if (navDashboardBtn) navDashboardBtn.addEventListener('click', () => switchPage('dashboard'));
     if (navBlankBtn) navBlankBtn.addEventListener('click', () => switchPage('blank'));
+    if (navPeopleBtn) navPeopleBtn.addEventListener('click', () => switchPage('people'));
+    if (navAccountRankBtn) navAccountRankBtn.addEventListener('click', () => switchPage('accountRank'));
+    if (navVideoRankBtn) navVideoRankBtn.addEventListener('click', () => switchPage('videoRank'));
+    if (navCompareBtn) navCompareBtn.addEventListener('click', () => switchPage('compare'));
     if (productSelectedDisplayEl) {
       productSelectedDisplayEl.addEventListener('click', () => toggleProductPickerPopover());
     }
@@ -1829,19 +2912,158 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
         applyDailyQuickDate(key);
       });
     }
+    if (dailyChartModeBarEl) {
+      dailyChartModeBarEl.addEventListener('click', (e) => {
+        const btn = e.target && e.target.closest ? e.target.closest('.chip[data-daily-chart-mode]') : null;
+        if (!btn) return;
+        const mode = btn.getAttribute('data-daily-chart-mode');
+        if (!mode) return;
+        dailyChartMode = mode;
+        setDailyChartModeActive(mode);
+        renderDailyTrendChart(filteredDailyRows());
+      });
+    }
+
+    [peopleStartDateEl, peopleEndDateEl, peopleAccountSelectEl, peopleEditorSelectEl, peopleProductSelectEl, peopleCountrySelectEl]
+      .forEach(el => el && el.addEventListener('change', () => {
+        if (el === peopleStartDateEl || el === peopleEndDateEl) setPeopleQuickDateActive(null);
+        peopleExpandedEditors = new Set();
+        renderPeopleRanking();
+      }));
+    if (peopleQuickDateBarEl) {
+      peopleQuickDateBarEl.addEventListener('click', (e) => {
+        const btn = e.target && e.target.closest ? e.target.closest('.chip[data-people-quick-date]') : null;
+        if (!btn) return;
+        const key = btn.getAttribute('data-people-quick-date');
+        if (!key) return;
+        applyPeopleQuickDate(key);
+      });
+    }
+    [accountRankStartDateEl, accountRankEndDateEl, accountRankAccountSelectEl, accountRankEditorSelectEl, accountRankProductSelectEl, accountRankCountrySelectEl]
+      .forEach(el => el && el.addEventListener('change', () => {
+        if (el === accountRankStartDateEl || el === accountRankEndDateEl) setAccountRankQuickDateActive(null);
+        accountRankExpanded = new Set();
+        renderAccountRanking();
+      }));
+    if (accountRankQuickDateBarEl) {
+      accountRankQuickDateBarEl.addEventListener('click', (e) => {
+        const btn = e.target && e.target.closest ? e.target.closest('.chip[data-account-rank-quick-date]') : null;
+        if (!btn) return;
+        const key = btn.getAttribute('data-account-rank-quick-date');
+        if (!key) return;
+        setQuickDateToRange(key, accountRankStartDateEl, accountRankEndDateEl, setAccountRankQuickDateActive, () => {
+          accountRankExpanded = new Set();
+          renderAccountRanking();
+        });
+      });
+    }
+    [videoRankStartDateEl, videoRankEndDateEl, videoRankAccountSelectEl, videoRankEditorSelectEl, videoRankProductSelectEl, videoRankCountrySelectEl]
+      .forEach(el => el && el.addEventListener('change', () => {
+        if (el === videoRankStartDateEl || el === videoRankEndDateEl) setVideoRankQuickDateActive(null);
+        videoRankExpanded = new Set();
+        renderVideoRanking();
+      }));
+    if (videoRankQuickDateBarEl) {
+      videoRankQuickDateBarEl.addEventListener('click', (e) => {
+        const btn = e.target && e.target.closest ? e.target.closest('.chip[data-video-rank-quick-date]') : null;
+        if (!btn) return;
+        const key = btn.getAttribute('data-video-rank-quick-date');
+        if (!key) return;
+        setQuickDateToRange(key, videoRankStartDateEl, videoRankEndDateEl, setVideoRankQuickDateActive, () => {
+          videoRankExpanded = new Set();
+          renderVideoRanking();
+        });
+      });
+    }
+    if (addCompareConditionBtn) {
+      addCompareConditionBtn.addEventListener('click', () => {
+        compareConditions.push(newCompareCondition());
+        renderCompareConditionsUI();
+        renderCompareChart();
+      });
+    }
+    if (removeCompareConditionBtn) {
+      removeCompareConditionBtn.addEventListener('click', () => {
+        if (compareConditions.length <= 1) return;
+        compareConditions.pop();
+        renderCompareConditionsUI();
+        renderCompareChart();
+      });
+    }
+    if (compareMetricSelectEl) {
+      compareMetricSelectEl.addEventListener('change', () => {
+        compareMetric = compareMetricSelectEl.value || 'gmv';
+        renderCompareChart();
+      });
+    }
+    if (compareConditionsWrapEl) {
+      compareConditionsWrapEl.addEventListener('click', (e) => {
+        const btn = e.target && e.target.closest ? e.target.closest('button[data-remove-id]') : null;
+        if (!btn) return;
+        const id = Number(btn.getAttribute('data-remove-id'));
+        if (!id) return;
+        compareConditions = compareConditions.filter(c => c.id !== id);
+        ensureCompareConditions();
+        renderCompareConditionsUI();
+        renderCompareChart();
+      });
+      compareConditionsWrapEl.addEventListener('change', (e) => {
+        const target = e.target;
+        const row = target && target.closest ? target.closest('.compare-row[data-cmp-id]') : null;
+        if (!row) return;
+        const id = Number(row.getAttribute('data-cmp-id'));
+        const field = target.getAttribute('data-field');
+        if (!id || !field) return;
+        const c = compareConditions.find(x => x.id === id);
+        if (!c) return;
+        c[field] = target.value;
+        renderCompareChart();
+      });
+      compareConditionsWrapEl.addEventListener('input', (e) => {
+        const target = e.target;
+        const row = target && target.closest ? target.closest('.compare-row[data-cmp-id]') : null;
+        if (!row) return;
+        const id = Number(row.getAttribute('data-cmp-id'));
+        const field = target.getAttribute('data-field');
+        if (!id || !field) return;
+        const c = compareConditions.find(x => x.id === id);
+        if (!c) return;
+        c[field] = target.value;
+        if (field === 'name' || field === 'deviceKeyword') renderCompareChart();
+      });
+    }
+    if (closePeopleTop10ModalBtn) closePeopleTop10ModalBtn.addEventListener('click', () => { peopleTop10ModalOverlayEl.style.display = 'none'; });
+    if (peopleTop10ModalOverlayEl) peopleTop10ModalOverlayEl.addEventListener('click', (e) => { if (e.target === peopleTop10ModalOverlayEl) peopleTop10ModalOverlayEl.style.display = 'none'; });
 
     // Init
     (async function init() {
       dataInputEl.value = DEFAULT_TSV_TEMPLATE;
       initHeaderSorting();
       initDailyHeaderSorting();
+      initPeopleHeaderSorting();
+      initAccountHeaderSorting();
+      initVideoHeaderSorting();
       updateHeaderArrows();
       updateDailyHeaderArrows();
+      updatePeopleHeaderArrows();
+      updateAccountHeaderArrows();
+      updateVideoHeaderArrows();
       await loadInitialData();
       await loadInitialDailyData();
       updateProductSelectedDisplay();
       setQuickDateActive('all');
       setDailyQuickDateActive('all');
+      setDailyChartModeActive('usd');
+      setPeopleQuickDateActive('all');
+      setAccountRankQuickDateActive('all');
+      setVideoRankQuickDateActive('all');
+      ensureCompareConditions();
+      renderCompareConditionsUI();
+      if (compareMetricSelectEl) compareMetricSelectEl.value = compareMetric;
+      renderPeopleRanking();
+      renderAccountRanking();
+      renderVideoRanking();
+      renderCompareChart();
     })();
   </script>
 </body>
