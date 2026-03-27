@@ -89,6 +89,8 @@
     /* Totals row (between filters and table header) */
     .totals-wrap {
       margin: 10px 0;
+      overflow-x: auto;
+      overflow-y: hidden;
     }
     .totals-grid {
       display: grid;
@@ -104,6 +106,8 @@
       text-align: center;
       font-size: 12px;
       color: #444;
+      white-space: nowrap;
+      min-width: 0;
     }
     .totals-label { color: #666; margin-right: 6px; }
     .totals-value {
@@ -114,8 +118,80 @@
       white-space: nowrap;
     }
     #dashboardPage .totals-cell { font-size: 14px; }
-    #dashboardPage .totals-label { font-size: 13px; }
-    #dashboardPage .totals-value { font-size: 17px; }
+    #dashboardPage .totals-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      text-align: center;
+    }
+    #dashboardPage .totals-grid .totals-cell:nth-child(1),
+    #dashboardPage .totals-grid .totals-cell:nth-child(2),
+    #dashboardPage .totals-grid .totals-cell:nth-child(3),
+    #dashboardPage .totals-grid .totals-cell:nth-child(4),
+    #dashboardPage .totals-grid .totals-cell:nth-child(5),
+    #dashboardPage .totals-grid .totals-cell:nth-child(6) {
+      align-items: center;
+      text-align: center;
+      padding-right: 0;
+    }
+    #dashboardPage .totals-label {
+      display: block;
+      margin-right: 0;
+      margin-bottom: 0;
+      font-size: 12px;
+      line-height: 1.2;
+      color: #666;
+      white-space: nowrap;
+    }
+    #dashboardPage .totals-value {
+      display: block;
+      font-size: 20px;
+      line-height: 1.1;
+      font-weight: 700;
+      color: #111;
+      white-space: nowrap;
+    }
+    #dashboardPage .totals-grid {
+      padding: 8px 0;
+    }
+    #dashboardPage .totals-wrap::-webkit-scrollbar { height: 8px; }
+    #dashboardPage .totals-wrap::-webkit-scrollbar-thumb { background: #d7d7d7; border-radius: 999px; }
+    #blankPage .totals-grid {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 48px;
+      padding: 8px 0;
+    }
+    #blankPage .totals-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      text-align: center;
+      white-space: nowrap;
+      min-width: 130px;
+    }
+    #blankPage .totals-label {
+      display: block;
+      margin-right: 0;
+      margin-bottom: 0;
+      font-size: 12px;
+      line-height: 1.2;
+      color: #666;
+      white-space: nowrap;
+    }
+    #blankPage .totals-value {
+      display: block;
+      font-size: 20px;
+      line-height: 1.1;
+      font-weight: 700;
+      color: #111;
+      white-space: nowrap;
+    }
     .chipbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
     .chip {
       padding: 6px 10px;
@@ -265,6 +341,29 @@
       position: sticky;
       top: 12px;
     }
+    .left-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      padding: 2px 2px 8px 2px;
+      border-bottom: 1px solid #eee;
+    }
+    .left-brand-logo {
+      width: 34px;
+      height: 34px;
+      flex: 0 0 34px;
+      display: block;
+      object-fit: contain;
+    }
+    .left-brand-text {
+      font-size: 13px;
+      line-height: 1.1;
+      font-weight: 700;
+      color: #111;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+    }
     .left-nav-title { font-size: 12px; color: #666; margin-bottom: 8px; }
     .nav-btn {
       width: 100%;
@@ -338,6 +437,10 @@
 <body>
   <div class="app-layout">
     <aside class="left-nav">
+      <div class="left-brand" aria-label="DKTT logo">
+        <img class="left-brand-logo" src="./logo.png" alt="DKTT logo" />
+        <div class="left-brand-text">DKTT, INC.</div>
+      </div>
       <div class="left-nav-title">页面选项</div>
       <button id="navDashboardBtn" class="nav-btn active" type="button">大盘数据</button>
       <button id="navBlankBtn" class="nav-btn" type="button">每日出单数据</button>
@@ -411,7 +514,7 @@
   <div class="totals-wrap">
     <div class="totals-grid" id="totalsGrid">
       <div class="totals-cell">
-        <span class="totals-label">product - 总产品数</span><span class="totals-value" id="totalProducts">0</span>
+        <span class="totals-label">Product - 总产品数</span><span class="totals-value" id="totalProducts">0</span>
       </div>
       <div class="totals-cell">
         <span class="totals-label">GMV - 总GMV数量</span><span class="totals-value" id="totalGmv">¥0.00</span>
@@ -512,7 +615,6 @@
             <div class="totals-cell"><span class="totals-label">总佣金</span><span class="totals-value" id="dailyTotalCommission">0</span></div>
             <div class="totals-cell"><span class="totals-label">总人民币佣金</span><span class="totals-value" id="dailyTotalCommissionCny">0</span></div>
             <div class="totals-cell"><span class="totals-label">总出单数量</span><span class="totals-value" id="dailyTotalOrders">0</span></div>
-            <div class="totals-cell"></div><div class="totals-cell"></div><div class="totals-cell"></div>
           </div>
         </div>
 
@@ -990,11 +1092,11 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
     let compareConditions = [];
     let compareNextId = 1;
     let compareMetric = 'gmv';
-    let peopleSortMetric = 'orders';
+    let peopleSortMetric = 'gmv';
     let peopleSortDir = 'desc';
-    let accountSortMetric = 'orders';
+    let accountSortMetric = 'gmv';
     let accountSortDir = 'desc';
-    let videoSortMetric = 'orders';
+    let videoSortMetric = 'gmv';
     let videoSortDir = 'desc';
     let dailySortMetric = 'date';
     let dailySortDir = 'desc';
@@ -1034,6 +1136,7 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
     const totalPlayEl = document.getElementById('totalPlay');
     const totalVideosEl = document.getElementById('totalVideos');
     const totalCommissionEl = document.getElementById('totalCommission');
+    const totalsGridEl = document.getElementById('totalsGrid');
 
     const openDataModalBtn = document.getElementById('openDataModalBtn');
     const dataModalOverlay = document.getElementById('dataModalOverlay');
@@ -1338,9 +1441,21 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
       return Array.from(map.values());
     }
 
+    function syncDashboardTotalsColumns() {
+      if (!totalsGridEl) return;
+      const ths = Array.from(document.querySelectorAll('#dashboardPage .table-wrap > table > thead > tr:first-child > th'));
+      if (!ths.length) return;
+      const widths = ths.map(th => Math.round(th.getBoundingClientRect().width)).filter(w => w > 0);
+      if (!widths.length) return;
+      totalsGridEl.style.gridTemplateColumns = widths.map(w => `${w}px`).join(' ');
+      const totalWidth = widths.reduce((a, b) => a + b, 0);
+      totalsGridEl.style.minWidth = `${totalWidth}px`;
+    }
+
     function renderProducts() {
       const filtered = filteredRows();
       updateTotals();
+      syncDashboardTotalsColumns();
       const products = groupByProduct(filtered);
       products.sort(compareStrictSingleKey);
 
@@ -1441,6 +1556,7 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
           owner: decodeURIComponent(btn.getAttribute('data-owner') || '')
         }));
       });
+      syncDashboardTotalsColumns();
     }
 
     function openTop10Modal({ mode, product, owner }) {
@@ -2869,7 +2985,10 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
     if (closeProductPickerBtn) {
       closeProductPickerBtn.addEventListener('click', () => closeProductPickerPopover());
     }
-    window.addEventListener('resize', () => { if (productPickerOpen) positionProductPickerPopover(); });
+    window.addEventListener('resize', () => {
+      if (productPickerOpen) positionProductPickerPopover();
+      syncDashboardTotalsColumns();
+    });
     window.addEventListener('scroll', () => { if (productPickerOpen) positionProductPickerPopover(); }, true);
     document.addEventListener('mousedown', (e) => {
       if (!productPickerOpen) return;
