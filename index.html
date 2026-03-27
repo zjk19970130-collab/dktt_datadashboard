@@ -340,7 +340,12 @@
       padding: 10px;
       position: sticky;
       top: 12px;
+      min-height: calc(100vh - 24px);
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
     }
+    .left-nav-menu { flex: 1 1 auto; }
     .left-brand {
       display: flex;
       align-items: center;
@@ -363,6 +368,17 @@
       color: #111;
       letter-spacing: 0.2px;
       white-space: nowrap;
+    }
+    .theme-toggle-btn {
+      margin-top: auto;
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      padding: 0;
     }
     .left-nav-title { font-size: 12px; color: #666; margin-bottom: 8px; }
     .nav-btn {
@@ -432,6 +448,139 @@
       margin-bottom: 8px;
       background: #fff;
     }
+
+    /* ===== DKTT Terminal UI Theme (style-only override) ===== */
+    :root {
+      --dktt-bg: #0a0a0a;
+      --dktt-card: #141414;
+      --dktt-card-2: #101010;
+      --dktt-border: #262626;
+      --dktt-text: #ffffff;
+      --dktt-muted: #888888;
+      --dktt-accent: #ff9500;
+      --dktt-hover: #1f1f1f;
+    }
+
+    body.dktt-dark {
+      background: var(--dktt-bg);
+      color: var(--dktt-text);
+      font-family: "Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    }
+    body.dktt-dark .app-layout { gap: 16px; }
+    body.dktt-dark .left-nav {
+      background: var(--dktt-bg);
+      border: 1px solid var(--dktt-border);
+      border-radius: 10px;
+    }
+    body.dktt-dark .left-brand { border-bottom-color: var(--dktt-border); }
+    body.dktt-dark .left-brand-text { color: var(--dktt-text); letter-spacing: 0.4px; }
+    body.dktt-dark .left-nav-title { color: var(--dktt-muted); }
+    body.dktt-dark .nav-btn {
+      background: transparent;
+      border-color: transparent;
+      color: var(--dktt-muted);
+      border-radius: 6px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    body.dktt-dark .nav-btn:hover {
+      background: var(--dktt-hover);
+      color: var(--dktt-text);
+      border-color: var(--dktt-border);
+    }
+    body.dktt-dark .nav-btn.active {
+      background: var(--dktt-hover);
+      color: var(--dktt-accent);
+      border-color: var(--dktt-border);
+    }
+
+    body.dktt-dark .app-main { color: var(--dktt-text); }
+    body.dktt-dark h2 { color: var(--dktt-text); font-weight: 900; letter-spacing: 0.2px; }
+    body.dktt-dark .muted { color: var(--dktt-muted); }
+    body.dktt-dark .msg { color: var(--dktt-muted); }
+    body.dktt-dark .msg.error { color: #ff6b5e; }
+    body.dktt-dark .sep { background: var(--dktt-border); }
+    body.dktt-dark .daily-wrap, body.dktt-dark .blank-page { background: transparent; color: var(--dktt-text); }
+    body.dktt-dark .field label {
+      color: var(--dktt-muted);
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.7px;
+    }
+    body.dktt-dark select, body.dktt-dark input, body.dktt-dark .product-selected-display, body.dktt-dark textarea {
+      background: var(--dktt-card);
+      color: var(--dktt-text);
+      border-color: var(--dktt-border);
+      border-radius: 6px;
+    }
+    body.dktt-dark input::placeholder, body.dktt-dark textarea::placeholder { color: #6f6f6f; }
+    body.dktt-dark button {
+      background: var(--dktt-card);
+      border-color: var(--dktt-border);
+      color: var(--dktt-text);
+      border-radius: 6px;
+      font-weight: 600;
+    }
+    body.dktt-dark button:hover { background: var(--dktt-hover); border-color: #3a3a3a; }
+    body.dktt-dark #openDataModalBtn, body.dktt-dark #loadDataBtn, body.dktt-dark #openDailyDataModalBtn, body.dktt-dark #loadDailyDataBtn {
+      background: var(--dktt-accent);
+      border-color: var(--dktt-accent);
+      color: #000;
+      font-weight: 800;
+    }
+    body.dktt-dark #openDataModalBtn:hover, body.dktt-dark #loadDataBtn:hover, body.dktt-dark #openDailyDataModalBtn:hover, body.dktt-dark #loadDailyDataBtn:hover {
+      filter: brightness(0.95);
+    }
+
+    body.dktt-dark .chip {
+      background: var(--dktt-card);
+      border-color: var(--dktt-border);
+      color: var(--dktt-muted);
+    }
+    body.dktt-dark .chip:hover { background: var(--dktt-hover); color: var(--dktt-text); }
+    body.dktt-dark .chip.active {
+      background: #2a1a05;
+      border-color: var(--dktt-accent);
+      color: var(--dktt-accent);
+    }
+
+    body.dktt-dark .totals-grid, body.dktt-dark .chart-card, body.dktt-dark .table-wrap, body.dktt-dark .sub-wrap, body.dktt-dark .popover, body.dktt-dark .modal {
+      background: var(--dktt-card);
+      border-color: var(--dktt-border);
+    }
+    body.dktt-dark .totals-label { color: var(--dktt-muted) !important; }
+    body.dktt-dark .totals-value { color: var(--dktt-text) !important; }
+    body.dktt-dark table { background: transparent; }
+    body.dktt-dark thead th {
+      background: var(--dktt-card-2);
+      color: var(--dktt-muted);
+      border-bottom-color: var(--dktt-border);
+    }
+    body.dktt-dark tbody td { border-bottom-color: var(--dktt-border); color: var(--dktt-text); }
+    body.dktt-dark tbody tr:hover td { background: #1a1a1a !important; }
+    body.dktt-dark .module-a td { background: #141414; }
+    body.dktt-dark .module-b td { background: #171717; }
+    body.dktt-dark .numWrap, body.dktt-dark .metric-num, body.dktt-dark .modalNum { color: var(--dktt-text); }
+    body.dktt-dark .btn-link { color: var(--dktt-accent); }
+    body.dktt-dark .headerSort .sortArrow,
+    body.dktt-dark .dailyHeaderSort .sortArrow,
+    body.dktt-dark .peopleHeaderSort .sortArrow,
+    body.dktt-dark .accountHeaderSort .sortArrow,
+    body.dktt-dark .videoHeaderSort .sortArrow { color: #5f5f5f; }
+    body.dktt-dark .headerSort.active .sortArrow,
+    body.dktt-dark .dailyHeaderSort.active .sortArrow,
+    body.dktt-dark .peopleHeaderSort.active .sortArrow,
+    body.dktt-dark .accountHeaderSort.active .sortArrow,
+    body.dktt-dark .videoHeaderSort.active .sortArrow { color: var(--dktt-accent); }
+    body.dktt-dark .modal-overlay { background: rgba(0, 0, 0, 0.78); }
+    body.dktt-dark .modal-header { background: #111; border-bottom: 1px solid var(--dktt-border); }
+    body.dktt-dark .modal-title { color: var(--dktt-text); }
+    body.dktt-dark .modal-body { background: var(--dktt-card); }
+    body.dktt-dark .close-x { color: var(--dktt-text); }
+    body.dktt-dark .top10-table th, body.dktt-dark .top10-table td { border-bottom-color: var(--dktt-border); }
+    body.dktt-dark ::-webkit-scrollbar { width: 8px; height: 8px; }
+    body.dktt-dark ::-webkit-scrollbar-thumb { background: #343434; border-radius: 999px; }
+    body.dktt-dark ::-webkit-scrollbar-track { background: #111; }
   </style>
 </head>
 <body>
@@ -441,13 +590,16 @@
         <img class="left-brand-logo" src="./logo.png" alt="DKTT logo" />
         <div class="left-brand-text">DKTT, INC.</div>
       </div>
-      <div class="left-nav-title">页面选项</div>
-      <button id="navDashboardBtn" class="nav-btn active" type="button">大盘数据</button>
-      <button id="navBlankBtn" class="nav-btn" type="button">每日出单数据</button>
-      <button id="navPeopleBtn" class="nav-btn" type="button">人员排行</button>
-      <button id="navAccountRankBtn" class="nav-btn" type="button">账号排行</button>
-      <button id="navVideoRankBtn" class="nav-btn" type="button">视频排行</button>
-      <button id="navCompareBtn" class="nav-btn" type="button">数据对比</button>
+      <div class="left-nav-menu">
+        <div class="left-nav-title">页面选项</div>
+        <button id="navDashboardBtn" class="nav-btn active" type="button">大盘数据</button>
+        <button id="navBlankBtn" class="nav-btn" type="button">每日出单数据</button>
+        <button id="navPeopleBtn" class="nav-btn" type="button">人员排行</button>
+        <button id="navAccountRankBtn" class="nav-btn" type="button">账号排行</button>
+        <button id="navVideoRankBtn" class="nav-btn" type="button">视频排行</button>
+        <button id="navCompareBtn" class="nav-btn" type="button">数据对比</button>
+      </div>
+      <button id="themeToggleBtn" type="button" class="theme-toggle-btn" title="切换主题" aria-label="切换主题">🌙</button>
     </aside>
 
     <main class="app-main">
@@ -1147,6 +1299,7 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
     const navAccountRankBtn = document.getElementById('navAccountRankBtn');
     const navVideoRankBtn = document.getElementById('navVideoRankBtn');
     const navCompareBtn = document.getElementById('navCompareBtn');
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
     const dashboardPageEl = document.getElementById('dashboardPage');
     const blankPageEl = document.getElementById('blankPage');
     const peoplePageEl = document.getElementById('peoplePage');
@@ -1366,6 +1519,17 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
       if (navVideoRankBtn) navVideoRankBtn.classList.toggle('active', showVideoRank);
       if (navCompareBtn) navCompareBtn.classList.toggle('active', showCompare);
       closeProductPickerPopover();
+    }
+
+    function applyTheme(theme) {
+      const dark = theme === 'dark';
+      document.body.classList.toggle('dktt-dark', dark);
+      if (themeToggleBtn) {
+        themeToggleBtn.textContent = dark ? '☀' : '🌙';
+        themeToggleBtn.title = dark ? '切换白天版' : '切换黑夜版';
+        themeToggleBtn.setAttribute('aria-label', dark ? '切换白天版' : '切换黑夜版');
+      }
+      try { localStorage.setItem('dktt-theme', dark ? 'dark' : 'light'); } catch (_) {}
     }
 
     function filteredRows() {
@@ -2979,6 +3143,12 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
     if (navAccountRankBtn) navAccountRankBtn.addEventListener('click', () => switchPage('accountRank'));
     if (navVideoRankBtn) navVideoRankBtn.addEventListener('click', () => switchPage('videoRank'));
     if (navCompareBtn) navCompareBtn.addEventListener('click', () => switchPage('compare'));
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener('click', () => {
+        const isDark = document.body.classList.contains('dktt-dark');
+        applyTheme(isDark ? 'light' : 'dark');
+      });
+    }
     if (productSelectedDisplayEl) {
       productSelectedDisplayEl.addEventListener('click', () => toggleProductPickerPopover());
     }
@@ -3156,6 +3326,9 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
 
     // Init
     (async function init() {
+      let savedTheme = 'light';
+      try { savedTheme = localStorage.getItem('dktt-theme') || 'light'; } catch (_) {}
+      applyTheme(savedTheme === 'dark' ? 'dark' : 'light');
       dataInputEl.value = DEFAULT_TSV_TEMPLATE;
       initHeaderSorting();
       initDailyHeaderSorting();
