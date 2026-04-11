@@ -747,8 +747,8 @@
       </div>
       <div class="left-nav-menu">
         <div class="left-nav-title">页面选项</div>
-        <button id="navBlankBtn" class="nav-btn" type="button">每日数据</button>
-        <button id="navDashboardBtn" class="nav-btn active" type="button">产品排行</button>
+        <button id="navBlankBtn" class="nav-btn active" type="button">每日数据</button>
+        <button id="navDashboardBtn" class="nav-btn" type="button">产品排行</button>
         <button id="navPeopleBtn" class="nav-btn" type="button">人员排行</button>
         <button id="navAccountRankBtn" class="nav-btn" type="button">账号排行</button>
         <button id="navVideoRankBtn" class="nav-btn" type="button">视频排行</button>
@@ -758,7 +758,7 @@
     </aside>
 
     <main class="app-main">
-      <section id="dashboardPage">
+      <section id="dashboardPage" style="display:none;">
   <div class="row" style="align-items:center; justify-content:space-between;">
     <h2 style="margin: 0;">大盘数据</h2>
     <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
@@ -869,7 +869,7 @@
   </div>
       </section>
 
-      <section id="blankPage" class="daily-wrap" style="display:none;">
+      <section id="blankPage" class="daily-wrap">
         <div class="row" style="align-items:center; justify-content:space-between;">
           <h2 style="margin: 0;">每日数据</h2>
           <div style="display:flex; gap:10px; align-items:center;">
@@ -3499,6 +3499,7 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
       renderAccountRanking();
       renderVideoRanking();
       renderCompareChart();
+      switchPage('blank');
     })();
   </script>
 </body>
