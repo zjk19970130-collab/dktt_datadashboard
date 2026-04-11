@@ -4,55 +4,377 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Data Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
   <style>
-    body { font-family: Arial, Helvetica, sans-serif; margin: 16px; background: #fff; color: #111; }
-    .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin-bottom: 12px; }
-    .field { display: flex; flex-direction: column; gap: 6px; min-width: 160px; }
-    label { font-size: 12px; color: #444; }
-    select, input { padding: 8px; font-size: 13px; border: 1px solid #ddd; border-radius: 8px; background: #fff; box-sizing: border-box; }
-    button { padding: 8px 10px; font-size: 13px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; cursor: pointer; }
-    button:hover { background: #f3f3f3; }
+    /* Linear-inspired tokens (default UI is dark) */
+    :root {
+      --ln-bg: #0C0C0D;
+      --ln-surface: #161618;
+      --ln-surface-2: #1A1A1D;
+      --ln-surface-hover: #1C1C1F;
+      --ln-border: #262626;
+      --ln-text: #E8E8E8;
+      --ln-text-secondary: #8E8E93;
+      --ln-accent: #5E6AD2;
+      --ln-accent-soft: rgba(94, 106, 210, 0.14);
+      --ln-radius: 6px;
+      --ln-page-pad: 28px;
+      --ln-section-gap: 20px;
+      --ln-row-a: #161618;
+      --ln-row-b: #18181A;
+      --ln-row-hover: #1F1F22;
+      --ln-row-detail: #1E1E21;
+      --ln-table-line: rgba(255, 255, 255, 0.07);
+      --ln-table-head: rgba(142, 142, 147, 0.92);
+      --ln-table-hover: rgba(255, 255, 255, 0.045);
+      --ln-icon: rgba(142, 142, 147, 0.88);
+      --ln-icon-muted: rgba(110, 110, 115, 0.9);
+      /* 深度：大投影改为内描边 + 顶缘微高光（Linear 质感） */
+      --ln-inset-ring: inset 0 0 0 1px rgba(255, 255, 255, 0.09);
+      --ln-inset-top: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+    }
 
-    .sep { height: 1px; background: #eee; margin: 10px 0; }
+    /* Light mode (theme toggle): remap tokens */
+    body:not(.dktt-dark) {
+      --ln-bg: #F4F4F5;
+      --ln-surface: #FFFFFF;
+      --ln-surface-2: #F9FAFB;
+      --ln-surface-hover: #F4F4F5;
+      --ln-border: #E4E4E7;
+      --ln-text: #18181B;
+      --ln-text-secondary: #71717A;
+      --ln-row-a: #FFFFFF;
+      --ln-row-b: #FAFAFA;
+      --ln-row-hover: #F4F4F5;
+      --ln-row-detail: #F0F0F2;
+      --ln-table-line: rgba(24, 24, 27, 0.09);
+      --ln-table-head: rgba(113, 113, 122, 0.95);
+      --ln-table-hover: rgba(0, 0, 0, 0.04);
+      --ln-icon: rgba(113, 113, 122, 0.92);
+      --ln-icon-muted: rgba(113, 113, 122, 0.75);
+      --ln-inset-ring: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+      --ln-inset-top: inset 0 1px 0 0 rgba(255, 255, 255, 0.65);
+    }
 
-    .table-wrap { overflow: auto; border: 1px solid #eee; border-radius: 10px; }
-    table { border-collapse: collapse; width: 100%; min-width: 1120px; table-layout: fixed; }
-    th, td { padding: 10px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
-    thead th { position: sticky; top: 0; background: #fafafa; z-index: 10; text-align: center; }
-    tbody td { text-align: center; line-height: 1.35; }
+    *, *::before, *::after { box-sizing: border-box; }
 
-    /* Numeric alignment: keep column position, align digits by right-most place */
-    .numCell { text-align: center; }
-    .numWrap {
-      display: inline-block;
-      min-width: 12ch;
+    /* Lucide：统一线宽与柔和颜色（非 React 项目使用 UMD + data-lucide） */
+    svg.lucide {
+      stroke: currentColor;
+      color: var(--ln-icon);
+      flex-shrink: 0;
+    }
+    body {
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: var(--ln-page-pad);
+      background: var(--ln-bg);
+      color: var(--ln-text);
+      font-size: 13px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; margin-bottom: var(--ln-section-gap); }
+    /* 各页顶部：标题单独一行；下一行左快捷日期、右日期/下拉/重置 */
+    .page-toolbar {
+      margin-top: 0;
+      padding-top: 0;
+      margin-bottom: var(--ln-section-gap);
+    }
+    .app-main > section.daily-wrap {
+      margin: 0;
+      padding: 0;
+    }
+    .page-title-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .page-title-row h2 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+    /* 第二行：左「快捷日期」芯片，右 Start/End 与下拉、重置（与芯片同一行对齐） */
+    .page-toolbar-filters-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px 20px;
+      margin: 0;
+    }
+    .page-toolbar-filters-row .field--chipbar-left {
+      flex: 0 1 auto;
+      min-width: min(100%, 260px);
+      max-width: 100%;
+      gap: 6px;
+    }
+    .page-toolbar-filters-row .field--chipbar-left > label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--ln-text-secondary);
+    }
+    .page-toolbar-filters-row .page-inline-filters {
+      flex: 1 1 380px;
+    }
+    .page-inline-filters {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: flex-end;
+      gap: 10px 12px;
+      flex: 1 1 360px;
+      min-width: 0;
+    }
+    .page-inline-filters .field.field--toolbar {
+      gap: 6px;
+      min-width: 0;
+      margin: 0;
+    }
+    .field-label-toolbar {
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 1.2;
+      color: var(--ln-text-secondary);
+      letter-spacing: 0.04em;
+    }
+    .field-label-toolbar--en {
+      text-transform: uppercase;
+    }
+    .field-label-toolbar--zh {
+      letter-spacing: 0;
+      text-transform: none;
+      font-size: 12px;
+    }
+    .page-inline-filters input[type="date"],
+    .page-inline-filters select {
+      width: 100%;
+      min-height: 34px;
+      padding: 7px 10px;
+      font-size: 13px;
+      box-sizing: border-box;
+    }
+    .field--toolbar-date {
+      flex: 0 0 150px;
+      width: 150px;
+      max-width: 100%;
+    }
+    .field--toolbar-select {
+      flex: 0 0 128px;
+      width: 128px;
+      max-width: 100%;
+    }
+    .field--toolbar-reset {
+      flex: 0 0 auto;
+    }
+    .field--toolbar-reset .field-label-spacer {
+      display: block;
+      min-height: 14px;
+      line-height: 14px;
+      font-size: 11px;
+      visibility: hidden;
+      user-select: none;
+    }
+    .field--toolbar-reset button {
+      min-height: 34px;
+      box-sizing: border-box;
+      padding: 7px 12px;
+      font-size: 13px;
+    }
+    .field--chipbar-wide {
+      flex: 1 1 100%;
+      min-width: 0;
+    }
+    .page-filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: flex-end;
+    }
+    .field { display: flex; flex-direction: column; gap: 8px; min-width: 160px; }
+    label { font-size: 12px; font-weight: 500; color: var(--ln-text-secondary); }
+    select, input {
+      padding: 8px 10px;
+      font-size: 13px;
+      border: 1px solid var(--ln-border);
+      border-radius: var(--ln-radius);
+      background: var(--ln-surface);
+      color: var(--ln-text);
+      box-shadow: var(--ln-inset-top), var(--ln-inset-ring);
+    }
+    button {
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      border: 1px solid var(--ln-border);
+      border-radius: var(--ln-radius);
+      background: var(--ln-surface-hover);
+      color: var(--ln-text);
+      cursor: pointer;
+      box-shadow: var(--ln-inset-top), var(--ln-inset-ring);
+    }
+    button:hover { background: var(--ln-surface-hover); border-color: var(--ln-border); }
+
+    /* Linear 风格数据表：细横线、无纵线、小表头、首列留白、行悬停提亮（全站 .table-wrap 统一） */
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--ln-table-line);
+      border-radius: var(--ln-radius);
+      background: var(--ln-surface);
+      box-shadow: var(--ln-inset-top), var(--ln-inset-ring);
+    }
+    .table-wrap > table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 1120px;
+      table-layout: fixed;
+    }
+    .table-wrap .top10-table,
+    .table-wrap .ln-subtable {
+      min-width: 0;
+    }
+    .table-wrap th,
+    .table-wrap td {
+      height: 48px;
+      padding: 0 12px;
+      box-sizing: border-box;
+      border-left: none;
+      border-right: none;
+      border-top: none;
+      border-bottom: 1px solid var(--ln-table-line);
+      vertical-align: middle;
+      line-height: 1.35;
+    }
+    .table-wrap thead th {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--ln-surface);
+      color: var(--ln-table-head);
+      font-weight: 600;
+      font-size: 11px;
+      letter-spacing: 0.02em;
+      text-align: left;
+    }
+    .table-wrap thead th.col-num {
+      text-align: right;
+    }
+    th.col-text, td.col-text { text-align: left; }
+    th.col-num, td.col-num {
       text-align: right;
       font-variant-numeric: tabular-nums;
       font-feature-settings: "tnum" 1;
+    }
+    th.col-num .th-inner,
+    th.col-text .th-inner {
+      display: inline-flex;
+      width: 100%;
+      align-items: center;
+      gap: 6px;
+    }
+    th.col-num .th-inner { justify-content: flex-end; }
+    th.col-text .th-inner { justify-content: flex-start; }
+    .table-wrap thead th:first-child,
+    .table-wrap tbody td:first-child {
+      padding-left: 16px;
+    }
+    .table-wrap tbody tr:nth-child(odd) td,
+    .table-wrap tbody tr:nth-child(even) td {
+      background: var(--ln-surface) !important;
+    }
+    .table-wrap tbody tr:not(.daily-subrow):not(.collapse-detail):hover td {
+      background: var(--ln-table-hover) !important;
+    }
+    tbody tr.collapse-detail td,
+    tbody tr.daily-subrow td {
+      height: auto;
+      min-height: 48px;
+      vertical-align: top;
+      padding: 16px;
+      background: var(--ln-row-detail) !important;
+      border-bottom: 1px solid var(--ln-table-line);
+    }
+    .sub-wrap .table-wrap {
+      border-color: var(--ln-table-line);
+      background: transparent;
+      border-radius: var(--ln-radius);
+    }
+
+    .numWrap {
+      display: inline-block;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum" 1;
       white-space: nowrap;
-      transform: translateX(-2ch);
     }
     .modalNum {
       display: inline-block;
-      min-width: 10ch;
-      text-align: right;
       font-variant-numeric: tabular-nums;
       font-feature-settings: "tnum" 1;
       white-space: nowrap;
     }
 
-    .muted { color: #666; font-size: 12px; }
+    .muted { color: var(--ln-text-secondary); font-size: 12px; }
     .right { text-align: right; }
     .btn-link {
-      border: none; background: transparent; padding: 0; color: #0b66c3; cursor: pointer; text-decoration: underline;
+      border: none; background: transparent; padding: 0; color: #A8B0FF; cursor: pointer; text-decoration: none;
       font-size: 13px;
+      font-weight: 500;
     }
+    .btn-link:hover { color: #C4C8FF; text-decoration: underline; }
 
-    .detail-card { padding: 10px; border: 1px solid #eee; border-radius: 10px; background: #fff; }
-    .pill {
-      display:inline-block; padding: 2px 8px; border-radius: 999px; background: #f5f7ff;
-      border: 1px solid #e6e9ff; font-size: 12px; color: #2b3b8f; margin-right: 6px; margin-bottom: 6px;
+    .detail-card {
+      padding: 14px;
+      border: 1px solid var(--ln-border);
+      border-radius: var(--ln-radius);
+      background: var(--ln-surface);
+      box-shadow: var(--ln-inset-top), var(--ln-inset-ring);
     }
+    /* 标签 / 状态：深色胶囊 + 浅色字，避免刺眼底色 */
+    .pill {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 500;
+      margin-right: 6px;
+      margin-bottom: 6px;
+      background: var(--ln-surface-2);
+      color: var(--ln-text-secondary);
+      border: 1px solid var(--ln-table-line);
+      box-shadow: var(--ln-inset-top), var(--ln-inset-ring);
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 500;
+      background: var(--ln-surface-2);
+      color: var(--ln-text-secondary);
+      border: 1px solid var(--ln-table-line);
+      box-shadow: var(--ln-inset-top), var(--ln-inset-ring);
+    }
+    .status-badge__dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--ln-text-secondary);
+      flex-shrink: 0;
+      opacity: 0.85;
+    }
+    .status-badge--warn .status-badge__dot { background: #D4A017; opacity: 0.9; }
+    .status-badge--danger .status-badge__dot { background: #C24141; opacity: 0.9; }
+    .status-badge--ok .status-badge__dot { background: #3D8B6E; opacity: 0.9; }
+    /* 已弃用等：低饱和圆点 + 深色底，避免荧光底条 */
+    .status-badge--deprecated .status-badge__dot { background: #8E8E93; opacity: 0.95; }
     .owner-row-grid {
       display: grid;
       grid-template-columns: 320fr repeat(5, 160fr) 220fr;
@@ -61,22 +383,16 @@
       width: 100%;
     }
     .owner-metric {
-      text-align: center;
+      text-align: right;
     }
     .owner-metric .metric-num {
       display: inline-block;
-      min-width: 12ch;
-      text-align: right;
       font-size: 13px;
       font-variant-numeric: tabular-nums;
       font-feature-settings: "tnum" 1;
       white-space: nowrap;
-      color: #111;
-      transform: translateX(-2ch);
+      color: var(--ln-text);
     }
-    /* Product module alternating backgrounds */
-    .module-a td { background: #ffffff; }
-    .module-b td { background: #fafcff; }
     .product-cell-inner {
       width: 290px;
       margin: 0 auto;
@@ -97,22 +413,23 @@
       grid-template-columns: 320fr repeat(5, 160fr) 220fr;
       align-items: center;
       width: 100%;
-      border: 1px solid #eee;
-      border-radius: 10px;
-      background: #fff;
-      padding: 10px 0;
+      border: 1px solid var(--ln-border);
+      border-radius: var(--ln-radius);
+      background: var(--ln-surface);
+      padding: 16px 12px;
+      box-shadow: var(--ln-inset-top), var(--ln-inset-ring);
     }
     .totals-cell {
       text-align: center;
       font-size: 12px;
-      color: #444;
+      color: var(--ln-text-secondary);
       white-space: nowrap;
       min-width: 0;
     }
-    .totals-label { color: #666; margin-right: 6px; }
+    .totals-label { color: var(--ln-text-secondary); margin-right: 6px; }
     .totals-value {
-      font-weight: 700;
-      color: #111;
+      font-weight: 600;
+      color: var(--ln-text);
       font-variant-numeric: tabular-nums;
       font-feature-settings: "tnum" 1;
       white-space: nowrap;
@@ -140,29 +457,50 @@
       display: block;
       margin-right: 0;
       margin-bottom: 0;
-      font-size: 12px;
+      font-size: 11px;
       line-height: 1.2;
-      color: #666;
+      color: var(--ln-text-secondary);
       white-space: nowrap;
     }
     #dashboardPage .totals-value {
       display: block;
-      font-size: 20px;
-      line-height: 1.1;
-      font-weight: 700;
-      color: #111;
+      font-size: 15px;
+      line-height: 1.2;
+      font-weight: 600;
+      color: var(--ln-text);
       white-space: nowrap;
     }
-    #dashboardPage .totals-grid {
-      padding: 8px 0;
+    /* 产品排行：取消汇总区横向滚动条（与每日数据页同理） */
+    #dashboardPage .totals-wrap {
+      overflow-x: visible;
+      overflow-y: visible;
     }
-    #dashboardPage .totals-wrap::-webkit-scrollbar { height: 8px; }
-    #dashboardPage .totals-wrap::-webkit-scrollbar-thumb { background: #d7d7d7; border-radius: 999px; }
+    #dashboardPage .totals-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 24px 28px;
+      row-gap: 12px;
+      padding: 8px 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    #dashboardPage .totals-grid .totals-cell:empty {
+      display: none;
+    }
+    /* 每日数据：取消汇总行的横向滚动（否则会出现整条灰色滚动条，易被误认为图表缩放条） */
+    #blankPage .totals-wrap {
+      overflow-x: visible;
+      overflow-y: visible;
+    }
     #blankPage .totals-grid {
       display: flex;
+      flex-wrap: wrap;
       justify-content: center;
       align-items: center;
       gap: 48px;
+      row-gap: 12px;
       padding: 8px 0;
     }
     #blankPage .totals-cell {
@@ -179,168 +517,143 @@
       display: block;
       margin-right: 0;
       margin-bottom: 0;
-      font-size: 12px;
+      font-size: 11px;
       line-height: 1.2;
-      color: #666;
+      color: var(--ln-text-secondary);
       white-space: nowrap;
     }
     #blankPage .totals-value {
       display: block;
-      font-size: 20px;
-      line-height: 1.1;
-      font-weight: 700;
-      color: #111;
+      font-size: 15px;
+      line-height: 1.2;
+      font-weight: 600;
+      color: var(--ln-text);
       white-space: nowrap;
     }
-    .chipbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .chipbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
     .chip {
-      padding: 6px 10px;
-      border: 1px solid #ddd;
-      border-radius: 999px;
-      background: #fff;
+      padding: 6px 12px;
+      border: 1px solid var(--ln-border);
+      border-radius: var(--ln-radius);
+      background: var(--ln-surface);
+      color: var(--ln-text-secondary);
       font-size: 12px;
+      font-weight: 500;
       cursor: pointer;
       user-select: none;
+      box-shadow: var(--ln-inset-top), var(--ln-inset-ring);
     }
-    .chip:hover { background: #f3f3f3; }
-    .chip.active { border-color: #0b66c3; background: #eef6ff; color: #0b66c3; }
-    .product-option-list {
-      width: 100%;
-      min-width: 360px;
-      min-height: 140px;
-      max-height: 220px;
-      overflow: auto;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      background: #fff;
-      padding: 4px;
-      box-sizing: border-box;
+    .chip:hover { background: var(--ln-surface-hover); color: var(--ln-text); }
+    .chip.active {
+      border-color: rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--ln-text);
+      box-shadow: var(--ln-inset-top), var(--ln-inset-ring);
     }
-    .product-option-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 6px 8px;
-      border-radius: 6px;
-      cursor: pointer;
-      user-select: none;
-      font-size: 12px;
+    body:not(.dktt-dark) .chip.active {
+      border-color: rgba(0, 0, 0, 0.1);
+      background: rgba(0, 0, 0, 0.04);
+      box-shadow: var(--ln-inset-top), var(--ln-inset-ring);
     }
-    .product-option-item:hover { background: #f6f8fa; }
-    .product-option-item input { margin: 0; flex: 0 0 auto; }
-    .product-filter-field { min-width: 380px; width: 380px; flex: 0 0 380px; }
-    .product-picker-row { display:flex; gap:8px; align-items:center; width: 100%; }
-    .product-selected-display {
-      width: 100%;
-      max-width: 100%;
-      height: 34px;
-      line-height: 34px;
-      padding: 0 10px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      background: #fff;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-size: 13px;
-      color: #222;
-    }
-    .product-picker-btn { white-space: nowrap; }
-    .popover {
-      position: fixed;
-      display: none;
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 12px;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.12);
-      padding: 10px;
-      z-index: 6000; /* above sticky header, below modals */
-    }
-    .popover-header { display:flex; justify-content: space-between; align-items:center; gap:10px; margin-bottom: 8px; }
-    .popover-title { font-weight: 700; font-size: 13px; }
 
     .textarea {
       width: 100%;
       min-height: 160px;
       resize: vertical;
-      padding: 10px;
+      padding: 12px;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       font-size: 12px;
-      line-height: 1.35;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      background: #fff;
+      line-height: 1.45;
+      border: 1px solid var(--ln-border);
+      border-radius: var(--ln-radius);
+      background: var(--ln-surface);
+      color: var(--ln-text);
+      box-shadow: var(--ln-inset-top), var(--ln-inset-ring);
     }
-    .msg { font-size: 12px; color: #666; margin-top: 6px; }
-    .msg.error { color: #b00020; }
+    .msg { font-size: 12px; color: var(--ln-text-secondary); margin-top: 8px; }
+    .msg.error { color: #E5484D; }
 
     /* Header sorting arrows (always visible) */
     .headerSort { cursor: pointer; user-select: none; white-space: nowrap; }
-    .headerSort .th-inner { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
-    .headerSort .sortArrow { display: inline-block; width: 18px; text-align: center; color: #bbb; font-weight: 700; }
+    .headerSort .th-inner { gap: 6px; }
+    .headerSort .sortArrow { display: inline-block; width: 18px; text-align: center; color: var(--ln-table-head); opacity: 0.75; font-weight: 500; }
     .headerSort.active { background: transparent; }
-    .headerSort.active .sortArrow { color: #0b66c3; }
+    .headerSort.active .sortArrow { color: var(--ln-accent); opacity: 1; }
     .dailyHeaderSort { cursor: pointer; user-select: none; white-space: nowrap; }
-    .dailyHeaderSort .th-inner { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
-    .dailyHeaderSort .sortArrow { display: inline-block; width: 16px; text-align: center; color: #bbb; font-weight: 700; }
-    .dailyHeaderSort.active .sortArrow { color: #0b66c3; }
+    .dailyHeaderSort .th-inner { gap: 6px; }
+    .dailyHeaderSort .sortArrow { display: inline-block; width: 16px; text-align: center; color: var(--ln-table-head); opacity: 0.75; font-weight: 500; }
+    .dailyHeaderSort.active .sortArrow { color: var(--ln-accent); opacity: 1; }
     .peopleHeaderSort { cursor: pointer; user-select: none; white-space: nowrap; }
-    .peopleHeaderSort .th-inner { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
-    .peopleHeaderSort .sortArrow { display: inline-block; width: 16px; text-align: center; color: #bbb; font-weight: 700; }
-    .peopleHeaderSort.active .sortArrow { color: #0b66c3; }
+    .peopleHeaderSort .th-inner { gap: 6px; }
+    .peopleHeaderSort .sortArrow { display: inline-block; width: 16px; text-align: center; color: var(--ln-table-head); opacity: 0.75; font-weight: 500; }
+    .peopleHeaderSort.active .sortArrow { color: var(--ln-accent); opacity: 1; }
     .accountHeaderSort { cursor: pointer; user-select: none; white-space: nowrap; }
-    .accountHeaderSort .th-inner { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
-    .accountHeaderSort .sortArrow { display: inline-block; width: 16px; text-align: center; color: #bbb; font-weight: 700; }
-    .accountHeaderSort.active .sortArrow { color: #0b66c3; }
+    .accountHeaderSort .th-inner { gap: 6px; }
+    .accountHeaderSort .sortArrow { display: inline-block; width: 16px; text-align: center; color: var(--ln-table-head); opacity: 0.75; font-weight: 500; }
+    .accountHeaderSort.active .sortArrow { color: var(--ln-accent); opacity: 1; }
     .videoHeaderSort { cursor: pointer; user-select: none; white-space: nowrap; }
-    .videoHeaderSort .th-inner { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
-    .videoHeaderSort .sortArrow { display: inline-block; width: 16px; text-align: center; color: #bbb; font-weight: 700; }
-    .videoHeaderSort.active .sortArrow { color: #0b66c3; }
+    .videoHeaderSort .th-inner { gap: 6px; }
+    .videoHeaderSort .sortArrow { display: inline-block; width: 16px; text-align: center; color: var(--ln-table-head); opacity: 0.75; font-weight: 500; }
+    .videoHeaderSort.active .sortArrow { color: var(--ln-accent); opacity: 1; }
 
     /* Modal (must be above sticky header) */
     .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5);
       display: none; align-items: center; justify-content: center;
-      padding: 18px;
+      padding: 24px;
       z-index: 9999;
     }
+    body.dktt-dark .modal-overlay { background: rgba(0, 0, 0, 0.62); }
     .modal {
       position: relative;
       z-index: 10000;
       width: min(1200px, 100%);
-      background: #fff; border-radius: 12px; border: 1px solid #eee;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+      background: var(--ln-surface);
+      border-radius: var(--ln-radius);
+      border: 1px solid var(--ln-border);
+      box-shadow: var(--ln-inset-top), var(--ln-inset-ring);
       overflow: hidden;
     }
-    .modal-header { padding: 12px 14px; background: #fafafa; display:flex; justify-content: space-between; align-items: center; gap: 10px; }
-    .modal-body { padding: 14px; }
-    .modal-title { font-weight: 700; }
-    .close-x { border: 1px solid #ddd; background: #fff; border-radius: 8px; padding: 6px 10px; cursor: pointer; }
-    .top10-table {
-      width: 100%;
-      min-width: 0;
-      table-layout: fixed;
+    .modal-header { padding: 14px 18px; background: var(--ln-surface); display:flex; justify-content: space-between; align-items: center; gap: 12px; border-bottom: 1px solid var(--ln-border); }
+    .modal-body { padding: 18px; }
+    .modal-title { font-weight: 600; font-size: 15px; color: var(--ln-text); letter-spacing: -0.02em; }
+    .close-x {
+      border: 1px solid var(--ln-border);
+      background: var(--ln-surface-hover);
+      border-radius: var(--ln-radius);
+      padding: 6px 12px;
+      cursor: pointer;
+      color: var(--ln-text);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: var(--ln-inset-top), var(--ln-inset-ring);
     }
-    .top10-table th,
-    .top10-table td {
-      padding: 6px 6px;
+    .close-x .lucide { color: var(--ln-icon); }
+    .close-x:hover .lucide { color: var(--ln-text); }
+    .close-x--icon {
+      padding: 8px;
+      min-width: 36px;
+      min-height: 36px;
+      justify-content: center;
+    }
+    .table-wrap .top10-table th,
+    .table-wrap .top10-table td {
       font-size: 12px;
-      text-align: center;
-      vertical-align: middle;
     }
 
     /* Left nav + page switching */
-    .app-layout { display: flex; gap: 14px; align-items: flex-start; }
+    .app-layout { display: flex; gap: 20px; align-items: flex-start; }
     .left-nav {
-      width: 180px;
-      border: 1px solid #eee;
-      border-radius: 10px;
-      background: #fff;
-      padding: 10px;
+      width: 188px;
+      border: 1px solid var(--ln-border);
+      border-radius: var(--ln-radius);
+      background: var(--ln-surface);
+      box-shadow: var(--ln-inset-top), var(--ln-inset-ring);
+      padding: 14px 12px;
       position: sticky;
-      top: 12px;
-      min-height: calc(100vh - 24px);
+      top: var(--ln-page-pad);
+      min-height: calc(100vh - var(--ln-page-pad) * 2);
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
@@ -349,10 +662,10 @@
     .left-brand {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 10px;
-      padding: 2px 2px 8px 2px;
-      border-bottom: 1px solid #eee;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding: 0 0 12px 0;
+      border-bottom: 1px solid var(--ln-border);
     }
     .left-brand-logo {
       width: 34px;
@@ -363,71 +676,121 @@
     }
     .left-brand-text {
       font-size: 13px;
-      line-height: 1.1;
-      font-weight: 700;
-      color: #111;
-      letter-spacing: 0.2px;
+      line-height: 1.15;
+      font-weight: 600;
+      color: var(--ln-text);
+      letter-spacing: -0.02em;
       white-space: nowrap;
     }
     .theme-toggle-btn {
       margin-top: auto;
-      width: 44px;
-      height: 44px;
-      border-radius: 999px;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--ln-radius);
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
       padding: 0;
+      border: 1px solid var(--ln-border);
+      background: var(--ln-surface-2);
+      color: var(--ln-icon);
+      box-shadow: var(--ln-inset-top), var(--ln-inset-ring);
     }
-    .left-nav-title { font-size: 12px; color: #666; margin-bottom: 8px; }
+    .theme-toggle-btn:hover {
+      background: var(--ln-surface-hover);
+      color: var(--ln-text);
+    }
+    .theme-toggle-btn .lucide { width: 18px; height: 18px; }
+    .left-nav-title {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--ln-text-secondary);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
     .nav-btn {
       width: 100%;
       text-align: left;
-      margin-bottom: 8px;
-      background: #fff;
+      margin-bottom: 6px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--ln-text-secondary);
+      font-weight: 500;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: none;
     }
+    .nav-btn .nav-ico {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      color: var(--ln-icon-muted);
+    }
+    .nav-btn .nav-ico .lucide { width: 16px; height: 16px; }
+    .nav-btn:hover {
+      background: var(--ln-surface-hover);
+      border-color: var(--ln-border);
+      color: var(--ln-text);
+      box-shadow: var(--ln-inset-top), var(--ln-inset-ring);
+    }
+    .nav-btn:hover .nav-ico { color: var(--ln-icon); }
     .nav-btn.active {
-      border-color: #0b66c3;
-      background: #eef6ff;
-      color: #0b66c3;
+      border-color: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--ln-text);
+      box-shadow: var(--ln-inset-top), var(--ln-inset-ring);
     }
-    .app-main { flex: 1; min-width: 0; }
+    .nav-btn.active .nav-ico { color: var(--ln-text); }
+    body:not(.dktt-dark) .nav-btn.active {
+      border-color: rgba(0, 0, 0, 0.1);
+      background: rgba(0, 0, 0, 0.04);
+    }
+    .app-main { flex: 1; min-width: 0; padding-bottom: 24px; }
+    .app-main h2 {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--ln-text);
+      margin: 0;
+    }
     .blank-page {
-      border: 1px dashed #ddd;
-      border-radius: 10px;
+      border: none;
+      border-radius: var(--ln-radius);
       min-height: 420px;
-      padding: 16px;
-      color: #666;
-      background: #fff;
+      padding: 4px 0 0 0;
+      color: var(--ln-text-secondary);
+      background: transparent;
     }
-    .daily-wrap { background: #fff; }
+    .daily-wrap { background: transparent; }
     .chart-card {
-      border: 1px solid #eee;
-      border-radius: 10px;
-      background: #fff;
-      padding: 10px;
-      margin-bottom: 10px;
+      border: 1px solid var(--ln-border);
+      border-radius: var(--ln-radius);
+      background: var(--ln-surface);
+      padding: 14px;
+      margin-bottom: var(--ln-section-gap);
+      box-shadow: var(--ln-inset-top), var(--ln-inset-ring);
     }
     .chart-title {
       font-size: 13px;
-      font-weight: 700;
-      margin-bottom: 6px;
-      color: #222;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--ln-text);
+      letter-spacing: -0.02em;
     }
     .daily-expand-btn {
-      padding: 4px 8px;
+      padding: 4px 10px;
       font-size: 12px;
-      border-radius: 6px;
-    }
-    .daily-subrow {
-      background: #fcfcff;
+      border-radius: var(--ln-radius);
     }
     .daily-subrow .sub-wrap {
-      padding: 8px 10px;
-      border: 1px solid #eee;
-      border-radius: 8px;
-      background: #fff;
+      padding: 12px 14px;
+      border: 1px solid var(--ln-table-line);
+      border-radius: var(--ln-radius);
+      background: var(--ln-surface);
     }
     #dailyTrendChart {
       width: 100% !important;
@@ -442,303 +805,59 @@
       height: 300px !important;
     }
     .compare-row {
-      border: 1px solid #eee;
-      border-radius: 10px;
-      padding: 10px;
-      margin-bottom: 8px;
-      background: #fff;
-    }
-
-    /* ===== DKTT Terminal UI Theme (style-only override) ===== */
-    :root {
-      --dktt-bg: #0a0a0a;
-      --dktt-card: #141414;
-      --dktt-card-2: #101010;
-      --dktt-border: #262626;
-      --dktt-text: #ffffff;
-      --dktt-muted: #888888;
-      --dktt-accent: #ff9500;
-      --dktt-hover: #1f1f1f;
-    }
-
-    body.dktt-dark {
-      background: var(--dktt-bg);
-      color: var(--dktt-text);
-      font-family: "Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-    }
-    body.dktt-dark .app-layout { gap: 16px; }
-    body.dktt-dark .left-nav {
-      background: var(--dktt-bg);
-      border: 1px solid var(--dktt-border);
-      border-radius: 10px;
-    }
-    body.dktt-dark .left-brand { border-bottom-color: var(--dktt-border); }
-    body.dktt-dark .left-brand-text { color: var(--dktt-text); letter-spacing: 0.4px; }
-    body.dktt-dark .left-nav-title { color: var(--dktt-muted); }
-    body.dktt-dark .nav-btn {
-      background: transparent;
-      border-color: transparent;
-      color: var(--dktt-muted);
-      border-radius: 6px;
-      font-weight: 600;
-      transition: all 0.2s ease;
-    }
-    body.dktt-dark .nav-btn:hover {
-      background: var(--dktt-hover);
-      color: var(--dktt-text);
-      border-color: var(--dktt-border);
-    }
-    body.dktt-dark .nav-btn.active {
-      background: var(--dktt-hover);
-      color: var(--dktt-accent);
-      border-color: var(--dktt-border);
-    }
-
-    body.dktt-dark .app-main { color: var(--dktt-text); }
-    body.dktt-dark h2 { color: var(--dktt-text); font-weight: 900; letter-spacing: 0.2px; }
-    body.dktt-dark .muted { color: var(--dktt-muted); }
-    body.dktt-dark .msg { color: var(--dktt-muted); }
-    body.dktt-dark .msg.error { color: #ff6b5e; }
-    body.dktt-dark .sep { background: var(--dktt-border); }
-    body.dktt-dark .daily-wrap, body.dktt-dark .blank-page { background: transparent; color: var(--dktt-text); }
-    body.dktt-dark .field label {
-      color: var(--dktt-muted);
-      text-transform: uppercase;
-      font-size: 11px;
-      letter-spacing: 0.7px;
-    }
-    body.dktt-dark select, body.dktt-dark input, body.dktt-dark .product-selected-display, body.dktt-dark textarea {
-      background: var(--dktt-card);
-      color: var(--dktt-text);
-      border-color: var(--dktt-border);
-      border-radius: 6px;
-    }
-    body.dktt-dark input::placeholder, body.dktt-dark textarea::placeholder { color: #6f6f6f; }
-    body.dktt-dark button {
-      background: var(--dktt-card);
-      border-color: var(--dktt-border);
-      color: var(--dktt-text);
-      border-radius: 6px;
-      font-weight: 600;
-    }
-    body.dktt-dark button:hover { background: var(--dktt-hover); border-color: #3a3a3a; }
-    body.dktt-dark #openDataModalBtn, body.dktt-dark #loadDataBtn, body.dktt-dark #openDailyDataModalBtn, body.dktt-dark #loadDailyDataBtn {
-      background: var(--dktt-accent);
-      border-color: var(--dktt-accent);
-      color: #000;
-      font-weight: 800;
-    }
-    body.dktt-dark #openDataModalBtn:hover, body.dktt-dark #loadDataBtn:hover, body.dktt-dark #openDailyDataModalBtn:hover, body.dktt-dark #loadDailyDataBtn:hover {
-      filter: brightness(0.95);
-    }
-
-    body.dktt-dark .chip {
-      background: var(--dktt-card);
-      border-color: var(--dktt-border);
-      color: var(--dktt-muted);
-    }
-    body.dktt-dark .chip:hover { background: var(--dktt-hover); color: var(--dktt-text); }
-    body.dktt-dark .chip.active {
-      background: #2a1a05;
-      border-color: var(--dktt-accent);
-      color: var(--dktt-accent);
-    }
-
-    body.dktt-dark .totals-grid, body.dktt-dark .chart-card, body.dktt-dark .table-wrap, body.dktt-dark .sub-wrap, body.dktt-dark .popover, body.dktt-dark .modal {
-      background: var(--dktt-card);
-      border-color: var(--dktt-border);
-    }
-    body.dktt-dark .totals-label { color: var(--dktt-muted) !important; }
-    body.dktt-dark .totals-value { color: var(--dktt-text) !important; }
-    body.dktt-dark table { background: transparent; }
-    body.dktt-dark thead th {
-      background: var(--dktt-card-2);
-      color: var(--dktt-muted);
-      border-bottom-color: var(--dktt-border);
-    }
-    body.dktt-dark tbody td { border-bottom-color: var(--dktt-border); color: var(--dktt-text); }
-    body.dktt-dark tbody tr:hover td { background: #1a1a1a !important; }
-    body.dktt-dark .module-a td { background: #141414; }
-    body.dktt-dark .module-b td { background: #171717; }
-    body.dktt-dark .numWrap, body.dktt-dark .metric-num, body.dktt-dark .modalNum { color: var(--dktt-text); }
-    body.dktt-dark .btn-link { color: var(--dktt-accent); }
-    body.dktt-dark .headerSort .sortArrow,
-    body.dktt-dark .dailyHeaderSort .sortArrow,
-    body.dktt-dark .peopleHeaderSort .sortArrow,
-    body.dktt-dark .accountHeaderSort .sortArrow,
-    body.dktt-dark .videoHeaderSort .sortArrow { color: #5f5f5f; }
-    body.dktt-dark .headerSort.active .sortArrow,
-    body.dktt-dark .dailyHeaderSort.active .sortArrow,
-    body.dktt-dark .peopleHeaderSort.active .sortArrow,
-    body.dktt-dark .accountHeaderSort.active .sortArrow,
-    body.dktt-dark .videoHeaderSort.active .sortArrow { color: var(--dktt-accent); }
-    body.dktt-dark .modal-overlay { background: rgba(0, 0, 0, 0.78); }
-    body.dktt-dark .modal-header { background: #111; border-bottom: 1px solid var(--dktt-border); }
-    body.dktt-dark .modal-title { color: var(--dktt-text); }
-    body.dktt-dark .modal-body { background: var(--dktt-card); }
-    body.dktt-dark .close-x { color: var(--dktt-text); }
-    body.dktt-dark .top10-table th, body.dktt-dark .top10-table td { border-bottom-color: var(--dktt-border); }
-    body.dktt-dark ::-webkit-scrollbar { width: 8px; height: 8px; }
-    body.dktt-dark ::-webkit-scrollbar-thumb { background: #343434; border-radius: 999px; }
-    body.dktt-dark ::-webkit-scrollbar-track { background: #111; }
-
-    /* ===== Gemini-inspired visual skin (day/night) ===== */
-    :root {
-      --gem-bg: #eef2f6;
-      --gem-card: #ffffff;
-      --gem-card-soft: #ffffff;
-      --gem-border: #dce3f0;
-      --gem-border-strong: #9fb3ff;
-      --gem-text: #0f172a;
-      --gem-muted: #5f6b82;
-      --gem-link: #4f46e5;
-      --gem-heading: #0b1222;
-      --gem-input-bg: #ffffff;
-      --gem-row-hover: #f0f4ff;
-      --gem-accent-a: #6f7dff;
-      --gem-accent-b: #5fd5ec;
-      --gem-shadow: none;
-      --gem-nav-hover-bg: rgba(99, 102, 241, 0.12);
-      --gem-nav-hover-text: #1f2a44;
-      --gem-nav-active-text: #1f2a44;
-    }
-
-    body.dktt-dark {
-      --gem-bg: radial-gradient(1200px 500px at 75% -20%, rgba(122, 128, 255, 0.22), transparent 60%),
-                radial-gradient(800px 480px at -5% 0%, rgba(73, 193, 255, 0.15), transparent 58%),
-                #0b1020;
-      --gem-card: rgba(17, 24, 39, 0.86);
-      --gem-card-soft: rgba(30, 41, 59, 0.62);
-      --gem-border: rgba(148, 163, 184, 0.24);
-      --gem-border-strong: rgba(165, 180, 252, 0.5);
-      --gem-text: #eef3ff;
-      --gem-muted: #9ca8c7;
-      --gem-link: #a5b4fc;
-      --gem-heading: #f8faff;
-      --gem-input-bg: rgba(15, 23, 42, 0.72);
-      --gem-row-hover: rgba(99, 102, 241, 0.08);
-      --gem-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 10px 26px rgba(2, 6, 23, 0.3);
-      --gem-nav-hover-bg: rgba(139, 156, 255, 0.12);
-      --gem-nav-hover-text: #eff4ff;
-      --gem-nav-active-text: #ffffff;
-    }
-
-    body {
-      margin: 0;
+      border: 1px solid var(--ln-border);
+      border-radius: var(--ln-radius);
       padding: 14px;
-      background: var(--gem-bg);
-      color: var(--gem-text);
-      font-family: "Inter", "Segoe UI", "PingFang SC", "Noto Sans SC", Arial, sans-serif;
+      margin-bottom: 12px;
+      background: var(--ln-surface);
+      box-shadow: var(--ln-inset-top), var(--ln-inset-ring);
     }
 
-    .app-layout { gap: 16px; }
-    .left-nav {
-      background: var(--gem-card-soft);
-      border-color: var(--gem-border);
-      border-radius: 18px;
-      box-shadow: var(--gem-shadow);
-      backdrop-filter: blur(14px);
-    }
-    .left-brand { border-bottom-color: var(--gem-border); }
-    .left-brand-text { color: var(--gem-text); letter-spacing: 0.35px; }
-    .left-nav-title { color: var(--gem-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-
-    .nav-btn {
-      border-color: transparent;
-      background: transparent;
-      color: var(--gem-muted);
-      border-radius: 12px;
-      transition: all 0.2s ease;
-    }
-    .nav-btn:hover {
-      background: var(--gem-nav-hover-bg);
-      border-color: var(--gem-border-strong);
-      color: var(--gem-nav-hover-text);
-    }
-    .nav-btn.active {
-      background: linear-gradient(135deg, rgba(139, 156, 255, 0.28), rgba(103, 232, 249, 0.2));
-      border-color: var(--gem-border-strong);
-      color: var(--gem-nav-active-text);
-      box-shadow: 0 8px 20px rgba(76, 102, 255, 0.2);
-    }
-
-    .theme-toggle-btn {
-      background: var(--gem-input-bg);
-      border-color: var(--gem-border);
-      color: var(--gem-text);
-    }
-    .theme-toggle-btn:hover { background: var(--gem-nav-hover-bg); }
-
-    .chart-card, .table-wrap, .totals-grid, .detail-card, .popover, .modal, .compare-row {
-      background: var(--gem-card);
-      border-color: var(--gem-border);
-      box-shadow: var(--gem-shadow);
-      backdrop-filter: blur(10px);
-    }
     .daily-wrap, .blank-page, #dashboardPage, #blankPage, #peoplePage, #accountRankPage, #videoRankPage, #comparePage {
       background: transparent !important;
       border: none !important;
       box-shadow: none !important;
     }
-    .app-main h2, .chart-title, .modal-title { color: var(--gem-heading); letter-spacing: 0.2px; }
-    .muted, .msg, label, .totals-label { color: var(--gem-muted) !important; }
 
-    input, select, .product-selected-display, .textarea, button, .close-x {
-      background: var(--gem-input-bg);
-      border-color: var(--gem-border);
-      color: var(--gem-text);
-      border-radius: 12px;
+    #addCompareConditionBtn {
+      background: var(--ln-accent);
+      border: 1px solid var(--ln-accent);
+      color: #fff;
+      font-weight: 500;
+      box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.12), inset 0 0 0 1px rgba(0, 0, 0, 0.15);
     }
-    input::placeholder, .textarea::placeholder { color: var(--gem-muted); }
-    button:hover, .close-x:hover {
-      background: var(--gem-nav-hover-bg);
-      border-color: var(--gem-border-strong);
+    #addCompareConditionBtn:hover {
+      filter: brightness(1.06);
     }
-
-    #openDataModalBtn, #loadDataBtn, #openDailyDataModalBtn, #loadDailyDataBtn, #addCompareConditionBtn {
-      background: linear-gradient(135deg, var(--gem-accent-a), var(--gem-accent-b));
-      border-color: transparent;
-      color: #061126;
-      font-weight: 700;
+    #addCompareConditionBtn,
+    #removeCompareConditionBtn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
-    #openDataModalBtn:hover, #loadDataBtn:hover, #openDailyDataModalBtn:hover, #loadDailyDataBtn:hover, #addCompareConditionBtn:hover {
-      filter: brightness(1.05);
+    #addCompareConditionBtn svg.lucide,
+    #removeCompareConditionBtn svg.lucide {
+      width: 14px;
+      height: 14px;
     }
-
-    .chip {
-      background: var(--gem-input-bg);
-      border-color: var(--gem-border);
-      color: var(--gem-muted);
-      border-radius: 999px;
+    .compare-row button[data-remove-id] {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
-    .chip:hover { background: var(--gem-nav-hover-bg); color: var(--gem-text); }
-    .chip.active {
-      background: rgba(139, 156, 255, 0.24);
-      border-color: var(--gem-border-strong);
-      color: var(--gem-text);
+    .compare-row button[data-remove-id] svg.lucide {
+      width: 14px;
+      height: 14px;
     }
 
-    .table-wrap { border-radius: 16px; }
-    thead th {
-      background: var(--gem-card);
-      color: var(--gem-muted);
-      border-bottom-color: var(--gem-border);
-    }
-    tbody td { border-bottom-color: var(--gem-border); color: var(--gem-text); }
-    tbody tr:hover td { background: var(--gem-row-hover) !important; }
-    .module-a td, .module-b td { background: transparent; }
-    .totals-value { color: var(--gem-text) !important; }
-    .btn-link { color: var(--gem-link); }
-    .btn-link:hover { filter: brightness(1.1); }
-    .headerSort .sortArrow, .dailyHeaderSort .sortArrow, .peopleHeaderSort .sortArrow, .accountHeaderSort .sortArrow, .videoHeaderSort .sortArrow { color: var(--gem-muted); }
-    .headerSort.active .sortArrow, .dailyHeaderSort.active .sortArrow, .peopleHeaderSort.active .sortArrow, .accountHeaderSort.active .sortArrow, .videoHeaderSort.active .sortArrow { color: var(--gem-link); }
-
-    .sep { background: var(--gem-border); }
-    .modal-overlay { background: rgba(2, 6, 23, 0.45); }
-    body.dktt-dark .modal-overlay { background: rgba(2, 6, 23, 0.68); }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-thumb { background: #3F3F42; border-radius: var(--ln-radius); }
+    ::-webkit-scrollbar-track { background: var(--ln-bg); }
+    body:not(.dktt-dark) ::-webkit-scrollbar-thumb { background: #D4D4D8; }
+    body:not(.dktt-dark) ::-webkit-scrollbar-track { background: var(--ln-bg); }
   </style>
 </head>
-<body>
+<body class="dktt-dark">
   <div class="app-layout">
     <aside class="left-nav">
       <div class="left-brand" aria-label="DKTT logo">
@@ -747,75 +866,64 @@
       </div>
       <div class="left-nav-menu">
         <div class="left-nav-title">页面选项</div>
-        <button id="navBlankBtn" class="nav-btn" type="button">每日数据</button>
-        <button id="navDashboardBtn" class="nav-btn active" type="button">产品排行</button>
-        <button id="navPeopleBtn" class="nav-btn" type="button">人员排行</button>
-        <button id="navAccountRankBtn" class="nav-btn" type="button">账号排行</button>
-        <button id="navVideoRankBtn" class="nav-btn" type="button">视频排行</button>
-        <button id="navCompareBtn" class="nav-btn" type="button">数据对比</button>
+        <button id="navBlankBtn" class="nav-btn active" type="button"><span class="nav-ico"><i data-lucide="calendar"></i></span><span>每日数据</span></button>
+        <button id="navDashboardBtn" class="nav-btn" type="button"><span class="nav-ico"><i data-lucide="package"></i></span><span>产品排行</span></button>
+        <button id="navPeopleBtn" class="nav-btn" type="button"><span class="nav-ico"><i data-lucide="users"></i></span><span>人员排行</span></button>
+        <button id="navAccountRankBtn" class="nav-btn" type="button"><span class="nav-ico"><i data-lucide="at-sign"></i></span><span>账号排行</span></button>
+        <button id="navVideoRankBtn" class="nav-btn" type="button"><span class="nav-ico"><i data-lucide="video"></i></span><span>视频排行</span></button>
+        <button id="navCompareBtn" class="nav-btn" type="button"><span class="nav-ico"><i data-lucide="git-compare"></i></span><span>数据对比</span></button>
       </div>
-      <button id="themeToggleBtn" type="button" class="theme-toggle-btn" title="切换主题" aria-label="切换主题">🌙</button>
+      <button id="themeToggleBtn" type="button" class="theme-toggle-btn" title="切换白天版" aria-label="切换白天版"><i data-lucide="sun" aria-hidden="true"></i></button>
     </aside>
 
     <main class="app-main">
-      <section id="dashboardPage">
-  <div class="row" style="align-items:center; justify-content:space-between;">
-    <h2 style="margin: 0;">大盘数据</h2>
-    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-      <button id="openDataModalBtn" type="button">更新数据</button>
-      <span id="dataMsg" class="msg"></span>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="field" style="min-width: 520px;">
-      <label>快捷日期</label>
-      <div class="chipbar" id="quickDateBar">
-        <button type="button" class="chip active" data-quick-date="all">全部</button>
-        <button type="button" class="chip" data-quick-date="latest">最新数据</button>
-        <button type="button" class="chip" data-quick-date="last7">过去一周</button>
-        <button type="button" class="chip" data-quick-date="last30">过去一个月</button>
-      </div>
-    </div>
-    <div class="field">
-      <label>Start date</label>
-      <input id="startDate" type="date"/>
-    </div>
-    <div class="field">
-      <label>End date</label>
-      <input id="endDate" type="date"/>
-    </div>
-    <div class="field" style="min-width: 180px;">
-      <label>Country</label>
-      <select id="countrySelect">
-        <option value="ALL">All</option>
-        <option value="美国">美国</option>
-        <option value="墨西哥">墨西哥</option>
-      </select>
-    </div>
-    <div class="field product-filter-field">
-      <label>产品筛选</label>
-      <div class="product-picker-row">
-        <div id="productSelectedDisplay" class="product-selected-display" title="所有产品">所有产品</div>
-        <button id="toggleProductPickerBtn" type="button" class="product-picker-btn">选择产品</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="sep"></div>
-
-  <!-- Product Picker Popover (top layer) -->
-  <div class="popover" id="productPickerPopover" role="dialog" aria-modal="false">
-    <div class="popover-header">
-      <div class="popover-title">选择产品（可多选）</div>
-      <div style="display:flex; gap:8px; align-items:center;">
-        <button type="button" class="close-x" id="clearProductSelectionBtn">清空勾选</button>
-        <button type="button" class="close-x" id="closeProductPickerBtn">Close</button>
-      </div>
-    </div>
-    <input id="productOptionSearch" type="text" placeholder="输入关键词筛选下拉选项" style="width:100%; margin-bottom:8px;"/>
-    <div id="productOptionList" class="product-option-list"></div>
-  </div>
+      <section id="dashboardPage" class="daily-wrap" style="display:none;">
+        <div class="page-toolbar">
+          <div class="page-title-row">
+            <h2>产品排行</h2>
+          </div>
+          <div class="page-filter-row page-toolbar-filters-row">
+            <div class="field field--toolbar field--chipbar-left">
+              <label>快捷日期</label>
+              <div class="chipbar" id="quickDateBar">
+                <button type="button" class="chip active" data-quick-date="all">全部</button>
+                <button type="button" class="chip" data-quick-date="latest">最新数据</button>
+                <button type="button" class="chip" data-quick-date="last7">过去一周</button>
+                <button type="button" class="chip" data-quick-date="last30">过去一个月</button>
+              </div>
+            </div>
+            <div class="page-inline-filters">
+              <div class="field field--toolbar field--toolbar-date">
+                <label class="field-label-toolbar field-label-toolbar--en" for="startDate">Start date</label>
+                <input id="startDate" type="date"/>
+              </div>
+              <div class="field field--toolbar field--toolbar-date">
+                <label class="field-label-toolbar field-label-toolbar--en" for="endDate">End date</label>
+                <input id="endDate" type="date"/>
+              </div>
+              <div class="field field--toolbar field--toolbar-select">
+                <label class="field-label-toolbar field-label-toolbar--zh" for="productAccountSelect">账号</label>
+                <select id="productAccountSelect"><option value="ALL">All</option></select>
+              </div>
+              <div class="field field--toolbar field--toolbar-select">
+                <label class="field-label-toolbar field-label-toolbar--zh" for="productEditorSelect">运营员</label>
+                <select id="productEditorSelect"><option value="ALL">All</option></select>
+              </div>
+              <div class="field field--toolbar field--toolbar-select">
+                <label class="field-label-toolbar field-label-toolbar--zh" for="productProductSelect">产品</label>
+                <select id="productProductSelect"><option value="ALL">All</option></select>
+              </div>
+              <div class="field field--toolbar field--toolbar-select">
+                <label class="field-label-toolbar field-label-toolbar--zh" for="countrySelect">团队</label>
+                <select id="countrySelect"><option value="ALL">All</option></select>
+              </div>
+              <div class="field field--toolbar field--toolbar-reset">
+                <span class="field-label-spacer" aria-hidden="true">&nbsp;</span>
+                <button id="resetFiltersBtn" type="button">重置筛选</button>
+              </div>
+            </div>
+          </div>
+        </div>
 
   <div class="totals-wrap">
     <div class="totals-grid" id="totalsGrid">
@@ -845,23 +953,23 @@
     <table>
       <thead>
         <tr>
-          <th style="width: 320px;">Product</th>
-          <th class="headerSort" style="width: 160px;" data-metric="gmv">
+          <th class="col-text" style="width: 320px;">Product</th>
+          <th class="headerSort col-num" style="width: 160px;" data-metric="gmv">
             <span class="th-inner">GMV <span class="sortArrow">↕</span></span>
           </th>
-          <th class="headerSort" style="width: 160px;" data-metric="orders">
+          <th class="headerSort col-num" style="width: 160px;" data-metric="orders">
             <span class="th-inner">销量(出单) <span class="sortArrow">↕</span></span>
           </th>
-          <th class="headerSort" style="width: 160px;" data-metric="play">
+          <th class="headerSort col-num" style="width: 160px;" data-metric="play">
             <span class="th-inner">播放量 <span class="sortArrow">↕</span></span>
           </th>
-          <th class="headerSort" style="width: 160px;" data-metric="videoCount">
+          <th class="headerSort col-num" style="width: 160px;" data-metric="videoCount">
             <span class="th-inner">视频数量 <span class="sortArrow">↕</span></span>
           </th>
-          <th class="headerSort" style="width: 160px;" data-metric="commission">
+          <th class="headerSort col-num" style="width: 160px;" data-metric="commission">
             <span class="th-inner">佣金 <span class="sortArrow">↕</span></span>
           </th>
-          <th style="width: 220px;">前10表现视频</th>
+          <th class="col-text" style="width: 220px;">前10表现视频</th>
         </tr>
       </thead>
       <tbody id="productTbody"></tbody>
@@ -869,48 +977,51 @@
   </div>
       </section>
 
-      <section id="blankPage" class="daily-wrap" style="display:none;">
-        <div class="row" style="align-items:center; justify-content:space-between;">
-          <h2 style="margin: 0;">每日数据</h2>
-          <div style="display:flex; gap:10px; align-items:center;">
-            <button id="openDailyDataModalBtn" type="button">更新每日数据</button>
-            <span id="dailyDataMsg" class="msg"></span>
+      <section id="blankPage" class="daily-wrap">
+        <div class="page-toolbar">
+          <div class="page-title-row">
+            <h2>每日数据</h2>
           </div>
-        </div>
-
-        <div class="row">
-          <div class="field" style="min-width: 520px;">
-            <label>快捷日期</label>
-            <div class="chipbar" id="dailyQuickDateBar">
-              <button type="button" class="chip active" data-daily-quick-date="all">全部</button>
-              <button type="button" class="chip" data-daily-quick-date="latest">最新数据</button>
-              <button type="button" class="chip" data-daily-quick-date="last7">过去一周</button>
-              <button type="button" class="chip" data-daily-quick-date="last30">过去一个月</button>
+          <div class="page-filter-row page-toolbar-filters-row">
+            <div class="field field--toolbar field--chipbar-left">
+              <label>快捷日期</label>
+              <div class="chipbar" id="dailyQuickDateBar">
+                <button type="button" class="chip active" data-daily-quick-date="all">全部</button>
+                <button type="button" class="chip" data-daily-quick-date="latest">最新数据</button>
+                <button type="button" class="chip" data-daily-quick-date="last7">过去一周</button>
+                <button type="button" class="chip" data-daily-quick-date="last30">过去一个月</button>
+              </div>
             </div>
-          </div>
-          <div class="field">
-            <label>Start date</label>
-            <input id="dailyStartDate" type="date"/>
-          </div>
-          <div class="field">
-            <label>End date</label>
-            <input id="dailyEndDate" type="date"/>
-          </div>
-          <div class="field" style="min-width: 180px;">
-            <label>账号</label>
-            <select id="dailyAccountSelect"><option value="ALL">All</option></select>
-          </div>
-          <div class="field" style="min-width: 160px;">
-            <label>拍剪员</label>
-            <select id="dailyEditorSelect"><option value="ALL">All</option></select>
-          </div>
-          <div class="field" style="min-width: 160px;">
-            <label>产品</label>
-            <select id="dailyProductSelect"><option value="ALL">All</option></select>
-          </div>
-          <div class="field" style="min-width: 140px;">
-            <label>国家</label>
-            <select id="dailyCountrySelect"><option value="ALL">All</option></select>
+            <div class="page-inline-filters">
+              <div class="field field--toolbar field--toolbar-date">
+                <label class="field-label-toolbar field-label-toolbar--en" for="dailyStartDate">Start date</label>
+                <input id="dailyStartDate" type="date"/>
+              </div>
+              <div class="field field--toolbar field--toolbar-date">
+                <label class="field-label-toolbar field-label-toolbar--en" for="dailyEndDate">End date</label>
+                <input id="dailyEndDate" type="date"/>
+              </div>
+              <div class="field field--toolbar field--toolbar-select">
+                <label class="field-label-toolbar field-label-toolbar--zh" for="dailyAccountSelect">账号</label>
+                <select id="dailyAccountSelect"><option value="ALL">All</option></select>
+              </div>
+              <div class="field field--toolbar field--toolbar-select">
+                <label class="field-label-toolbar field-label-toolbar--zh" for="dailyEditorSelect">运营员</label>
+                <select id="dailyEditorSelect"><option value="ALL">All</option></select>
+              </div>
+              <div class="field field--toolbar field--toolbar-select">
+                <label class="field-label-toolbar field-label-toolbar--zh" for="dailyProductSelect">产品</label>
+                <select id="dailyProductSelect"><option value="ALL">All</option></select>
+              </div>
+              <div class="field field--toolbar field--toolbar-select">
+                <label class="field-label-toolbar field-label-toolbar--zh" for="dailyCountrySelect">团队</label>
+                <select id="dailyCountrySelect"><option value="ALL">All</option></select>
+              </div>
+              <div class="field field--toolbar field--toolbar-reset">
+                <span class="field-label-spacer" aria-hidden="true">&nbsp;</span>
+                <button id="dailyResetFiltersBtn" type="button">重置筛选</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -946,17 +1057,17 @@
           <table>
             <thead>
               <tr>
-                <th class="dailyHeaderSort" data-daily-sort="date" style="width: 130px;"><span class="th-inner">日期 <span class="sortArrow">↕</span></span></th>
-                <th class="dailyHeaderSort" data-daily-sort="gmv" style="width: 130px;"><span class="th-inner">GMV <span class="sortArrow">↕</span></span></th>
-                <th class="dailyHeaderSort" data-daily-sort="orders" style="width: 110px;"><span class="th-inner">出单数量 <span class="sortArrow">↕</span></span></th>
-                <th class="dailyHeaderSort" data-daily-sort="commission" style="width: 120px;"><span class="th-inner">佣金 <span class="sortArrow">↕</span></span></th>
-                <th class="dailyHeaderSort" data-daily-sort="commissionGmv" style="width: 120px;"><span class="th-inner">佣金GMV <span class="sortArrow">↕</span></span></th>
-                <th class="dailyHeaderSort" data-daily-sort="gmvCny" style="width: 130px;"><span class="th-inner">GMV人民币 <span class="sortArrow">↕</span></span></th>
-                <th class="dailyHeaderSort" data-daily-sort="commissionCny" style="width: 130px;"><span class="th-inner">佣金人民币 <span class="sortArrow">↕</span></span></th>
-                <th style="width: 110px;">视频贡献</th>
-                <th style="width: 110px;">产品贡献</th>
-                <th style="width: 110px;">拍剪员贡献</th>
-                <th style="width: 110px;">账号贡献</th>
+                <th class="dailyHeaderSort col-text" data-daily-sort="date" style="width: 130px;"><span class="th-inner">日期 <span class="sortArrow">↕</span></span></th>
+                <th class="dailyHeaderSort col-num" data-daily-sort="gmv" style="width: 130px;"><span class="th-inner">GMV <span class="sortArrow">↕</span></span></th>
+                <th class="dailyHeaderSort col-num" data-daily-sort="orders" style="width: 110px;"><span class="th-inner">出单数量 <span class="sortArrow">↕</span></span></th>
+                <th class="dailyHeaderSort col-num" data-daily-sort="commission" style="width: 120px;"><span class="th-inner">佣金 <span class="sortArrow">↕</span></span></th>
+                <th class="dailyHeaderSort col-num" data-daily-sort="commissionGmv" style="width: 120px;"><span class="th-inner">佣金GMV <span class="sortArrow">↕</span></span></th>
+                <th class="dailyHeaderSort col-num" data-daily-sort="gmvCny" style="width: 130px;"><span class="th-inner">GMV人民币 <span class="sortArrow">↕</span></span></th>
+                <th class="dailyHeaderSort col-num" data-daily-sort="commissionCny" style="width: 130px;"><span class="th-inner">佣金人民币 <span class="sortArrow">↕</span></span></th>
+                <th class="col-text" style="width: 110px;">视频贡献</th>
+                <th class="col-text" style="width: 110px;">产品贡献</th>
+                <th class="col-text" style="width: 110px;">拍剪员贡献</th>
+                <th class="col-text" style="width: 110px;">账号贡献</th>
               </tr>
             </thead>
             <tbody id="dailyTbody"></tbody>
@@ -965,43 +1076,50 @@
       </section>
 
       <section id="peoplePage" class="daily-wrap" style="display:none;">
-        <div class="row" style="align-items:center; justify-content:space-between;">
-          <h2 style="margin: 0;">人员排行</h2>
-        </div>
-
-        <div class="row">
-          <div class="field" style="min-width: 520px;">
-            <label>快捷日期</label>
-            <div class="chipbar" id="peopleQuickDateBar">
-              <button type="button" class="chip active" data-people-quick-date="all">全部</button>
-              <button type="button" class="chip" data-people-quick-date="latest">最新数据</button>
-              <button type="button" class="chip" data-people-quick-date="last7">过去一周</button>
-              <button type="button" class="chip" data-people-quick-date="last30">过去一个月</button>
+        <div class="page-toolbar">
+          <div class="page-title-row">
+            <h2>人员排行</h2>
+          </div>
+          <div class="page-filter-row page-toolbar-filters-row">
+            <div class="field field--toolbar field--chipbar-left">
+              <label>快捷日期</label>
+              <div class="chipbar" id="peopleQuickDateBar">
+                <button type="button" class="chip active" data-people-quick-date="all">全部</button>
+                <button type="button" class="chip" data-people-quick-date="latest">最新数据</button>
+                <button type="button" class="chip" data-people-quick-date="last7">过去一周</button>
+                <button type="button" class="chip" data-people-quick-date="last30">过去一个月</button>
+              </div>
             </div>
-          </div>
-          <div class="field">
-            <label>Start date</label>
-            <input id="peopleStartDate" type="date"/>
-          </div>
-          <div class="field">
-            <label>End date</label>
-            <input id="peopleEndDate" type="date"/>
-          </div>
-          <div class="field" style="min-width: 180px;">
-            <label>账号</label>
-            <select id="peopleAccountSelect"><option value="ALL">All</option></select>
-          </div>
-          <div class="field" style="min-width: 160px;">
-            <label>拍剪员</label>
-            <select id="peopleEditorSelect"><option value="ALL">All</option></select>
-          </div>
-          <div class="field" style="min-width: 160px;">
-            <label>产品</label>
-            <select id="peopleProductSelect"><option value="ALL">All</option></select>
-          </div>
-          <div class="field" style="min-width: 140px;">
-            <label>国家</label>
-            <select id="peopleCountrySelect"><option value="ALL">All</option></select>
+            <div class="page-inline-filters">
+              <div class="field field--toolbar field--toolbar-date">
+                <label class="field-label-toolbar field-label-toolbar--en" for="peopleStartDate">Start date</label>
+                <input id="peopleStartDate" type="date"/>
+              </div>
+              <div class="field field--toolbar field--toolbar-date">
+                <label class="field-label-toolbar field-label-toolbar--en" for="peopleEndDate">End date</label>
+                <input id="peopleEndDate" type="date"/>
+              </div>
+              <div class="field field--toolbar field--toolbar-select">
+                <label class="field-label-toolbar field-label-toolbar--zh" for="peopleAccountSelect">账号</label>
+                <select id="peopleAccountSelect"><option value="ALL">All</option></select>
+              </div>
+              <div class="field field--toolbar field--toolbar-select">
+                <label class="field-label-toolbar field-label-toolbar--zh" for="peopleEditorSelect">运营员</label>
+                <select id="peopleEditorSelect"><option value="ALL">All</option></select>
+              </div>
+              <div class="field field--toolbar field--toolbar-select">
+                <label class="field-label-toolbar field-label-toolbar--zh" for="peopleProductSelect">产品</label>
+                <select id="peopleProductSelect"><option value="ALL">All</option></select>
+              </div>
+              <div class="field field--toolbar field--toolbar-select">
+                <label class="field-label-toolbar field-label-toolbar--zh" for="peopleCountrySelect">团队</label>
+                <select id="peopleCountrySelect"><option value="ALL">All</option></select>
+              </div>
+              <div class="field field--toolbar field--toolbar-reset">
+                <span class="field-label-spacer" aria-hidden="true">&nbsp;</span>
+                <button id="peopleResetFiltersBtn" type="button">重置筛选</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1009,15 +1127,15 @@
           <table>
             <thead>
               <tr>
-                <th style="width: 170px;">人员（拍剪员）</th>
-                <th class="peopleHeaderSort" data-people-sort="gmv" style="width: 130px;"><span class="th-inner">GMV <span class="sortArrow">↕</span></span></th>
-                <th class="peopleHeaderSort" data-people-sort="orders" style="width: 120px;"><span class="th-inner">出单数量 <span class="sortArrow">↕</span></span></th>
-                <th class="peopleHeaderSort" data-people-sort="commission" style="width: 120px;"><span class="th-inner">佣金 <span class="sortArrow">↕</span></span></th>
-                <th class="peopleHeaderSort" data-people-sort="commissionGmv" style="width: 130px;"><span class="th-inner">佣金GMV <span class="sortArrow">↕</span></span></th>
-                <th class="peopleHeaderSort" data-people-sort="gmvCny" style="width: 130px;"><span class="th-inner">GMV人民币 <span class="sortArrow">↕</span></span></th>
-                <th class="peopleHeaderSort" data-people-sort="commissionCny" style="width: 130px;"><span class="th-inner">佣金人民币 <span class="sortArrow">↕</span></span></th>
-                <th style="width: 150px;">前10视频</th>
-                <th style="width: 150px;">产品贡献</th>
+                <th class="col-text" style="width: 170px;">人员（拍剪员）</th>
+                <th class="peopleHeaderSort col-num" data-people-sort="gmv" style="width: 130px;"><span class="th-inner">GMV <span class="sortArrow">↕</span></span></th>
+                <th class="peopleHeaderSort col-num" data-people-sort="orders" style="width: 120px;"><span class="th-inner">出单数量 <span class="sortArrow">↕</span></span></th>
+                <th class="peopleHeaderSort col-num" data-people-sort="commission" style="width: 120px;"><span class="th-inner">佣金 <span class="sortArrow">↕</span></span></th>
+                <th class="peopleHeaderSort col-num" data-people-sort="commissionGmv" style="width: 130px;"><span class="th-inner">佣金GMV <span class="sortArrow">↕</span></span></th>
+                <th class="peopleHeaderSort col-num" data-people-sort="gmvCny" style="width: 130px;"><span class="th-inner">GMV人民币 <span class="sortArrow">↕</span></span></th>
+                <th class="peopleHeaderSort col-num" data-people-sort="commissionCny" style="width: 130px;"><span class="th-inner">佣金人民币 <span class="sortArrow">↕</span></span></th>
+                <th class="col-text" style="width: 150px;">前10视频</th>
+                <th class="col-text" style="width: 150px;">产品贡献</th>
               </tr>
             </thead>
             <tbody id="peopleTbody"></tbody>
@@ -1026,39 +1144,65 @@
       </section>
 
       <section id="accountRankPage" class="daily-wrap" style="display:none;">
-        <div class="row" style="align-items:center; justify-content:space-between;">
-          <h2 style="margin: 0;">账号排行</h2>
-        </div>
-        <div class="row">
-          <div class="field" style="min-width: 520px;">
-            <label>快捷日期</label>
-            <div class="chipbar" id="accountRankQuickDateBar">
-              <button type="button" class="chip active" data-account-rank-quick-date="all">全部</button>
-              <button type="button" class="chip" data-account-rank-quick-date="latest">最新数据</button>
-              <button type="button" class="chip" data-account-rank-quick-date="last7">过去一周</button>
-              <button type="button" class="chip" data-account-rank-quick-date="last30">过去一个月</button>
+        <div class="page-toolbar">
+          <div class="page-title-row">
+            <h2>账号排行</h2>
+          </div>
+          <div class="page-filter-row page-toolbar-filters-row">
+            <div class="field field--toolbar field--chipbar-left">
+              <label>快捷日期</label>
+              <div class="chipbar" id="accountRankQuickDateBar">
+                <button type="button" class="chip active" data-account-rank-quick-date="all">全部</button>
+                <button type="button" class="chip" data-account-rank-quick-date="latest">最新数据</button>
+                <button type="button" class="chip" data-account-rank-quick-date="last7">过去一周</button>
+                <button type="button" class="chip" data-account-rank-quick-date="last30">过去一个月</button>
+              </div>
+            </div>
+            <div class="page-inline-filters">
+              <div class="field field--toolbar field--toolbar-date">
+                <label class="field-label-toolbar field-label-toolbar--en" for="accountRankStartDate">Start date</label>
+                <input id="accountRankStartDate" type="date"/>
+              </div>
+              <div class="field field--toolbar field--toolbar-date">
+                <label class="field-label-toolbar field-label-toolbar--en" for="accountRankEndDate">End date</label>
+                <input id="accountRankEndDate" type="date"/>
+              </div>
+              <div class="field field--toolbar field--toolbar-select">
+                <label class="field-label-toolbar field-label-toolbar--zh" for="accountRankAccountSelect">账号</label>
+                <select id="accountRankAccountSelect"><option value="ALL">All</option></select>
+              </div>
+              <div class="field field--toolbar field--toolbar-select">
+                <label class="field-label-toolbar field-label-toolbar--zh" for="accountRankEditorSelect">运营员</label>
+                <select id="accountRankEditorSelect"><option value="ALL">All</option></select>
+              </div>
+              <div class="field field--toolbar field--toolbar-select">
+                <label class="field-label-toolbar field-label-toolbar--zh" for="accountRankProductSelect">产品</label>
+                <select id="accountRankProductSelect"><option value="ALL">All</option></select>
+              </div>
+              <div class="field field--toolbar field--toolbar-select">
+                <label class="field-label-toolbar field-label-toolbar--zh" for="accountRankCountrySelect">团队</label>
+                <select id="accountRankCountrySelect"><option value="ALL">All</option></select>
+              </div>
+              <div class="field field--toolbar field--toolbar-reset">
+                <span class="field-label-spacer" aria-hidden="true">&nbsp;</span>
+                <button id="accountRankResetFiltersBtn" type="button">重置筛选</button>
+              </div>
             </div>
           </div>
-          <div class="field"><label>Start date</label><input id="accountRankStartDate" type="date"/></div>
-          <div class="field"><label>End date</label><input id="accountRankEndDate" type="date"/></div>
-          <div class="field" style="min-width: 180px;"><label>账号</label><select id="accountRankAccountSelect"><option value="ALL">All</option></select></div>
-          <div class="field" style="min-width: 160px;"><label>拍剪员</label><select id="accountRankEditorSelect"><option value="ALL">All</option></select></div>
-          <div class="field" style="min-width: 160px;"><label>产品</label><select id="accountRankProductSelect"><option value="ALL">All</option></select></div>
-          <div class="field" style="min-width: 140px;"><label>国家</label><select id="accountRankCountrySelect"><option value="ALL">All</option></select></div>
         </div>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th style="width: 170px;">账号</th>
-                <th class="accountHeaderSort" data-account-sort="gmv" style="width: 130px;"><span class="th-inner">GMV <span class="sortArrow">↕</span></span></th>
-                <th class="accountHeaderSort" data-account-sort="orders" style="width: 120px;"><span class="th-inner">出单数量 <span class="sortArrow">↕</span></span></th>
-                <th class="accountHeaderSort" data-account-sort="commission" style="width: 120px;"><span class="th-inner">佣金 <span class="sortArrow">↕</span></span></th>
-                <th class="accountHeaderSort" data-account-sort="commissionGmv" style="width: 130px;"><span class="th-inner">佣金GMV <span class="sortArrow">↕</span></span></th>
-                <th class="accountHeaderSort" data-account-sort="gmvCny" style="width: 130px;"><span class="th-inner">GMV人民币 <span class="sortArrow">↕</span></span></th>
-                <th class="accountHeaderSort" data-account-sort="commissionCny" style="width: 130px;"><span class="th-inner">佣金人民币 <span class="sortArrow">↕</span></span></th>
-                <th style="width: 150px;">前10视频</th>
-                <th style="width: 150px;">产品贡献</th>
+                <th class="col-text" style="width: 170px;">账号</th>
+                <th class="accountHeaderSort col-num" data-account-sort="gmv" style="width: 130px;"><span class="th-inner">GMV <span class="sortArrow">↕</span></span></th>
+                <th class="accountHeaderSort col-num" data-account-sort="orders" style="width: 120px;"><span class="th-inner">出单数量 <span class="sortArrow">↕</span></span></th>
+                <th class="accountHeaderSort col-num" data-account-sort="commission" style="width: 120px;"><span class="th-inner">佣金 <span class="sortArrow">↕</span></span></th>
+                <th class="accountHeaderSort col-num" data-account-sort="commissionGmv" style="width: 130px;"><span class="th-inner">佣金GMV <span class="sortArrow">↕</span></span></th>
+                <th class="accountHeaderSort col-num" data-account-sort="gmvCny" style="width: 130px;"><span class="th-inner">GMV人民币 <span class="sortArrow">↕</span></span></th>
+                <th class="accountHeaderSort col-num" data-account-sort="commissionCny" style="width: 130px;"><span class="th-inner">佣金人民币 <span class="sortArrow">↕</span></span></th>
+                <th class="col-text" style="width: 150px;">前10视频</th>
+                <th class="col-text" style="width: 150px;">产品贡献</th>
               </tr>
             </thead>
             <tbody id="accountRankTbody"></tbody>
@@ -1067,37 +1211,63 @@
       </section>
 
       <section id="videoRankPage" class="daily-wrap" style="display:none;">
-        <div class="row" style="align-items:center; justify-content:space-between;">
-          <h2 style="margin: 0;">视频排行</h2>
-        </div>
-        <div class="row">
-          <div class="field" style="min-width: 520px;">
-            <label>快捷日期</label>
-            <div class="chipbar" id="videoRankQuickDateBar">
-              <button type="button" class="chip active" data-video-rank-quick-date="all">全部</button>
-              <button type="button" class="chip" data-video-rank-quick-date="latest">最新数据</button>
-              <button type="button" class="chip" data-video-rank-quick-date="last7">过去一周</button>
-              <button type="button" class="chip" data-video-rank-quick-date="last30">过去一个月</button>
+        <div class="page-toolbar">
+          <div class="page-title-row">
+            <h2>视频排行</h2>
+          </div>
+          <div class="page-filter-row page-toolbar-filters-row">
+            <div class="field field--toolbar field--chipbar-left">
+              <label>快捷日期</label>
+              <div class="chipbar" id="videoRankQuickDateBar">
+                <button type="button" class="chip active" data-video-rank-quick-date="all">全部</button>
+                <button type="button" class="chip" data-video-rank-quick-date="latest">最新数据</button>
+                <button type="button" class="chip" data-video-rank-quick-date="last7">过去一周</button>
+                <button type="button" class="chip" data-video-rank-quick-date="last30">过去一个月</button>
+              </div>
+            </div>
+            <div class="page-inline-filters">
+              <div class="field field--toolbar field--toolbar-date">
+                <label class="field-label-toolbar field-label-toolbar--en" for="videoRankStartDate">Start date</label>
+                <input id="videoRankStartDate" type="date"/>
+              </div>
+              <div class="field field--toolbar field--toolbar-date">
+                <label class="field-label-toolbar field-label-toolbar--en" for="videoRankEndDate">End date</label>
+                <input id="videoRankEndDate" type="date"/>
+              </div>
+              <div class="field field--toolbar field--toolbar-select">
+                <label class="field-label-toolbar field-label-toolbar--zh" for="videoRankAccountSelect">账号</label>
+                <select id="videoRankAccountSelect"><option value="ALL">All</option></select>
+              </div>
+              <div class="field field--toolbar field--toolbar-select">
+                <label class="field-label-toolbar field-label-toolbar--zh" for="videoRankEditorSelect">运营员</label>
+                <select id="videoRankEditorSelect"><option value="ALL">All</option></select>
+              </div>
+              <div class="field field--toolbar field--toolbar-select">
+                <label class="field-label-toolbar field-label-toolbar--zh" for="videoRankProductSelect">产品</label>
+                <select id="videoRankProductSelect"><option value="ALL">All</option></select>
+              </div>
+              <div class="field field--toolbar field--toolbar-select">
+                <label class="field-label-toolbar field-label-toolbar--zh" for="videoRankCountrySelect">团队</label>
+                <select id="videoRankCountrySelect"><option value="ALL">All</option></select>
+              </div>
+              <div class="field field--toolbar field--toolbar-reset">
+                <span class="field-label-spacer" aria-hidden="true">&nbsp;</span>
+                <button id="videoRankResetFiltersBtn" type="button">重置筛选</button>
+              </div>
             </div>
           </div>
-          <div class="field"><label>Start date</label><input id="videoRankStartDate" type="date"/></div>
-          <div class="field"><label>End date</label><input id="videoRankEndDate" type="date"/></div>
-          <div class="field" style="min-width: 180px;"><label>账号</label><select id="videoRankAccountSelect"><option value="ALL">All</option></select></div>
-          <div class="field" style="min-width: 160px;"><label>拍剪员</label><select id="videoRankEditorSelect"><option value="ALL">All</option></select></div>
-          <div class="field" style="min-width: 160px;"><label>产品</label><select id="videoRankProductSelect"><option value="ALL">All</option></select></div>
-          <div class="field" style="min-width: 140px;"><label>国家</label><select id="videoRankCountrySelect"><option value="ALL">All</option></select></div>
         </div>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th style="width: 230px;">视频</th>
-                <th class="videoHeaderSort" data-video-sort="gmv" style="width: 130px;"><span class="th-inner">GMV <span class="sortArrow">↕</span></span></th>
-                <th class="videoHeaderSort" data-video-sort="orders" style="width: 120px;"><span class="th-inner">出单数量 <span class="sortArrow">↕</span></span></th>
-                <th class="videoHeaderSort" data-video-sort="commission" style="width: 120px;"><span class="th-inner">佣金 <span class="sortArrow">↕</span></span></th>
-                <th class="videoHeaderSort" data-video-sort="commissionGmv" style="width: 130px;"><span class="th-inner">佣金GMV <span class="sortArrow">↕</span></span></th>
-                <th class="videoHeaderSort" data-video-sort="gmvCny" style="width: 130px;"><span class="th-inner">GMV人民币 <span class="sortArrow">↕</span></span></th>
-                <th class="videoHeaderSort" data-video-sort="commissionCny" style="width: 130px;"><span class="th-inner">佣金人民币 <span class="sortArrow">↕</span></span></th>
+                <th class="col-text" style="width: 230px;">视频</th>
+                <th class="videoHeaderSort col-num" data-video-sort="gmv" style="width: 130px;"><span class="th-inner">GMV <span class="sortArrow">↕</span></span></th>
+                <th class="videoHeaderSort col-num" data-video-sort="orders" style="width: 120px;"><span class="th-inner">出单数量 <span class="sortArrow">↕</span></span></th>
+                <th class="videoHeaderSort col-num" data-video-sort="commission" style="width: 120px;"><span class="th-inner">佣金 <span class="sortArrow">↕</span></span></th>
+                <th class="videoHeaderSort col-num" data-video-sort="commissionGmv" style="width: 130px;"><span class="th-inner">佣金GMV <span class="sortArrow">↕</span></span></th>
+                <th class="videoHeaderSort col-num" data-video-sort="gmvCny" style="width: 130px;"><span class="th-inner">GMV人民币 <span class="sortArrow">↕</span></span></th>
+                <th class="videoHeaderSort col-num" data-video-sort="commissionCny" style="width: 130px;"><span class="th-inner">佣金人民币 <span class="sortArrow">↕</span></span></th>
               </tr>
             </thead>
             <tbody id="videoRankTbody"></tbody>
@@ -1106,20 +1276,30 @@
       </section>
 
       <section id="comparePage" class="daily-wrap" style="display:none;">
-        <div class="row" style="align-items:center;">
-          <h2 style="margin: 0;">数据对比</h2>
-        </div>
-        <div class="row" style="align-items:center; justify-content:flex-start; gap:10px; margin-top:4px; margin-bottom:8px;">
-          <label style="font-size:12px; color:#666;">对比指标</label>
-          <select id="compareMetricSelect" style="min-width:150px;">
-            <option value="gmv">GMV (USD)</option>
-            <option value="commission">佣金 (USD)</option>
-            <option value="orders">出单数量</option>
-            <option value="gmvCny">GMV人民币</option>
-            <option value="commissionCny">佣金人民币</option>
-          </select>
-          <button id="addCompareConditionBtn" type="button">+ 增加对比组</button>
-          <button id="removeCompareConditionBtn" type="button">- 删除最后一组</button>
+        <div class="page-toolbar">
+          <div class="page-title-row">
+            <h2>数据对比</h2>
+          </div>
+          <div class="page-filter-row">
+            <div class="field" style="min-width: 180px;">
+              <label for="compareMetricSelect">对比指标</label>
+              <select id="compareMetricSelect">
+                <option value="gmv">GMV (USD)</option>
+                <option value="commission">佣金 (USD)</option>
+                <option value="orders">出单数量</option>
+                <option value="gmvCny">GMV人民币</option>
+                <option value="commissionCny">佣金人民币</option>
+              </select>
+            </div>
+            <div class="field" style="min-width: 140px;">
+              <label>&nbsp;</label>
+              <button id="addCompareConditionBtn" type="button"><i data-lucide="plus"></i>增加对比组</button>
+            </div>
+            <div class="field" style="min-width: 140px;">
+              <label>&nbsp;</label>
+              <button id="removeCompareConditionBtn" type="button"><i data-lucide="minus"></i>删除最后一组</button>
+            </div>
+          </div>
         </div>
         <div id="compareConditionsWrap"></div>
 
@@ -1136,7 +1316,7 @@
     <div class="modal">
       <div class="modal-header">
         <div class="modal-title" id="modalTitle">Top 10 videos</div>
-        <button class="close-x" id="closeModalBtn" type="button">Close</button>
+        <button class="close-x close-x--icon" id="closeModalBtn" type="button" aria-label="关闭"><i data-lucide="x" aria-hidden="true"></i></button>
       </div>
       <div class="modal-body">
         <div class="muted" id="modalSubTitle" style="margin-bottom: 10px;"></div>
@@ -1145,15 +1325,15 @@
           <table class="top10-table">
             <thead>
               <tr>
-                <th style="width: 48px;">Rank</th>
-                <th style="width: 150px;">Video</th>
-                <th style="width: 90px;">发布日期</th>
-                <th style="width: 95px;">产品</th>
-                <th style="width: 90px;">拍摄员</th>
-                <th style="width: 85px;">销量(出单)</th>
-                <th style="width: 95px;">GMV</th>
-                <th style="width: 95px;">播放量</th>
-                <th style="width: 95px;">佣金</th>
+                <th class="col-num" style="width: 48px;">Rank</th>
+                <th class="col-text" style="width: 150px;">Video</th>
+                <th class="col-text" style="width: 90px;">发布日期</th>
+                <th class="col-text" style="width: 95px;">产品</th>
+                <th class="col-text" style="width: 90px;">拍摄员</th>
+                <th class="col-num" style="width: 85px;">销量(出单)</th>
+                <th class="col-num" style="width: 95px;">GMV</th>
+                <th class="col-num" style="width: 95px;">播放量</th>
+                <th class="col-num" style="width: 95px;">佣金</th>
               </tr>
             </thead>
             <tbody id="top10Tbody"></tbody>
@@ -1167,50 +1347,11 @@
     </div>
   </div>
 
-  <!-- Data Update Modal -->
-  <div class="modal-overlay" id="dataModalOverlay">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">更新数据</div>
-        <button class="close-x" id="closeDataModalBtn" type="button">Close</button>
-      </div>
-      <div class="modal-body">
-        <div class="muted" style="margin-bottom:10px;">
-          粘贴最新 TSV（包含表头，Tab 分隔）。加载后会自动更新日期范围并刷新看板。
-        </div>
-        <textarea id="dataInput" class="textarea" spellcheck="false"></textarea>
-        <div style="display:flex; gap:10px; margin-top:10px; align-items:center; flex-wrap:wrap;">
-          <button id="loadDataBtn" type="button">加载数据并刷新</button>
-          <button id="resetFiltersBtn" type="button">重置筛选</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Daily Data Update Modal -->
-  <div class="modal-overlay" id="dailyDataModalOverlay">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">更新每日数据</div>
-        <button class="close-x" id="closeDailyDataModalBtn" type="button">Close</button>
-      </div>
-      <div class="modal-body">
-        <div class="muted" style="margin-bottom:10px;">
-          粘贴每日数据 TSV（含表头：日期、手机+账号、拍剪员、产品、国家、GMV、出单数量...）。
-        </div>
-        <textarea id="dailyDataInput" class="textarea" spellcheck="false"></textarea>
-        <div style="display:flex; gap:10px; margin-top:10px; align-items:center; flex-wrap:wrap;">
-          <button id="loadDailyDataBtn" type="button">加载每日数据</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <div class="modal-overlay" id="peopleTop10ModalOverlay">
     <div class="modal">
       <div class="modal-header">
         <div class="modal-title" id="peopleTop10ModalTitle">人员前10视频</div>
-        <button class="close-x" id="closePeopleTop10ModalBtn" type="button">Close</button>
+        <button class="close-x close-x--icon" id="closePeopleTop10ModalBtn" type="button" aria-label="关闭"><i data-lucide="x" aria-hidden="true"></i></button>
       </div>
       <div class="modal-body">
         <div class="muted" id="peopleTop10ModalSubTitle" style="margin-bottom: 10px;"></div>
@@ -1218,15 +1359,15 @@
           <table class="top10-table">
             <thead>
               <tr>
-                <th style="width: 58px;">#</th>
-                <th style="width: 220px;">视频链接</th>
-                <th style="width: 120px;">日期</th>
-                <th style="width: 140px;">产品</th>
-                <th style="width: 120px;">账号</th>
-                <th style="width: 120px;">拍剪员</th>
-                <th style="width: 100px;">出单数量</th>
-                <th style="width: 110px;">GMV</th>
-                <th style="width: 110px;">佣金</th>
+                <th class="col-num" style="width: 58px;">#</th>
+                <th class="col-text" style="width: 220px;">视频链接</th>
+                <th class="col-text" style="width: 120px;">日期</th>
+                <th class="col-text" style="width: 140px;">产品</th>
+                <th class="col-text" style="width: 120px;">账号</th>
+                <th class="col-text" style="width: 120px;">拍剪员</th>
+                <th class="col-num" style="width: 100px;">出单数量</th>
+                <th class="col-num" style="width: 110px;">GMV</th>
+                <th class="col-num" style="width: 110px;">佣金</th>
               </tr>
             </thead>
             <tbody id="peopleTop10Tbody"></tbody>
@@ -1237,7 +1378,15 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
   <script>
+    function refreshLucideIcons() {
+      try {
+        if (typeof lucide !== 'undefined' && lucide.createIcons) {
+          lucide.createIcons({ attrs: { 'stroke-width': 1.5 } });
+        }
+      } catch (_) {}
+    }
     const DEFAULT_TSV_TEMPLATE = `视频链接\t发布日期\t产品\t脚本\t手机+账号\tHOOK\t拍摄员\t国家\t广告code\t累计播放量\t累计出单\t累计GMV\t累计佣金
 https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t黑色头套\ttest\t08-@rawrollhisstyle\t\t赵永琦\t美国\t\t233,867\t25\t¥1,898.15\t¥143.00
 `;
@@ -1329,13 +1478,14 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
         const dateStr = safeText(cols[idx["发布日期"]]);
         const product = safeText(cols[idx["产品"]]);
         const script = safeText(cols[idx["脚本"]]);
+        const account = idx['手机+账号'] !== undefined ? safeText(cols[idx['手机+账号']]) : '';
         const owner = safeText(cols[idx["拍摄员"]]);
         const country = safeText(cols[idx["国家"]]);
         const play = parseIntComma(cols[idx["累计播放量"]]);
         const orders = parseIntComma(cols[idx["累计出单"]]);
         const gmv = parseCurrencyYuan(cols[idx["累计GMV"]]);
         const commission = parseCurrencyYuan(cols[idx["累计佣金"]]);
-        return { videoUrl, dateStr, dateObj: parseDateYMD_CH(dateStr), product, script, owner, country, play, orders, gmv, commission };
+        return { videoUrl, dateStr, dateObj: parseDateYMD_CH(dateStr), product, script, account, owner, country, play, orders, gmv, commission };
       });
     }
 
@@ -1405,26 +1555,22 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
     let expanded = new Set();
     let productSortMetric = 'gmv';
     let productSortDir = 'desc';
-    let selectedProducts = new Set();
 
     // UI
     const startDateEl = document.getElementById('startDate');
     const endDateEl = document.getElementById('endDate');
     const countrySelectEl = document.getElementById('countrySelect');
-    const productSelectedDisplayEl = document.getElementById('productSelectedDisplay');
-    const productOptionSearchEl = document.getElementById('productOptionSearch');
-    const productOptionListEl = document.getElementById('productOptionList');
-    const toggleProductPickerBtn = document.getElementById('toggleProductPickerBtn');
-    const productPickerPopoverEl = document.getElementById('productPickerPopover');
-    const closeProductPickerBtn = document.getElementById('closeProductPickerBtn');
-    const clearProductSelectionBtn = document.getElementById('clearProductSelectionBtn');
+    const productAccountSelectEl = document.getElementById('productAccountSelect');
+    const productEditorSelectEl = document.getElementById('productEditorSelect');
+    const productProductSelectEl = document.getElementById('productProductSelect');
     const productTbody = document.getElementById('productTbody');
     const quickDateBarEl = document.getElementById('quickDateBar');
 
-    const dataInputEl = document.getElementById('dataInput');
-    const loadDataBtn = document.getElementById('loadDataBtn');
     const resetFiltersBtn = document.getElementById('resetFiltersBtn');
-    const dataMsgEl = document.getElementById('dataMsg');
+    const dailyResetFiltersBtn = document.getElementById('dailyResetFiltersBtn');
+    const peopleResetFiltersBtn = document.getElementById('peopleResetFiltersBtn');
+    const accountRankResetFiltersBtn = document.getElementById('accountRankResetFiltersBtn');
+    const videoRankResetFiltersBtn = document.getElementById('videoRankResetFiltersBtn');
 
     const modalOverlay = document.getElementById('modalOverlay');
     const modalTitleEl = document.getElementById('modalTitle');
@@ -1440,9 +1586,6 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
     const totalCommissionEl = document.getElementById('totalCommission');
     const totalsGridEl = document.getElementById('totalsGrid');
 
-    const openDataModalBtn = document.getElementById('openDataModalBtn');
-    const dataModalOverlay = document.getElementById('dataModalOverlay');
-    const closeDataModalBtn = document.getElementById('closeDataModalBtn');
     const navDashboardBtn = document.getElementById('navDashboardBtn');
     const navBlankBtn = document.getElementById('navBlankBtn');
     const navPeopleBtn = document.getElementById('navPeopleBtn');
@@ -1456,12 +1599,6 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
     const accountRankPageEl = document.getElementById('accountRankPage');
     const videoRankPageEl = document.getElementById('videoRankPage');
     const comparePageEl = document.getElementById('comparePage');
-    const openDailyDataModalBtn = document.getElementById('openDailyDataModalBtn');
-    const dailyDataModalOverlay = document.getElementById('dailyDataModalOverlay');
-    const closeDailyDataModalBtn = document.getElementById('closeDailyDataModalBtn');
-    const dailyDataInputEl = document.getElementById('dailyDataInput');
-    const loadDailyDataBtn = document.getElementById('loadDailyDataBtn');
-    const dailyDataMsgEl = document.getElementById('dailyDataMsg');
     const dailyStartDateEl = document.getElementById('dailyStartDate');
     const dailyEndDateEl = document.getElementById('dailyEndDate');
     const dailyQuickDateBarEl = document.getElementById('dailyQuickDateBar');
@@ -1559,96 +1696,6 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
       });
     }
 
-    function getAllProductsFromRows() {
-      return Array.from(new Set(rows.map(r => r.product).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'zh-Hans'));
-    }
-
-    function getSelectedProducts() {
-      return Array.from(selectedProducts);
-    }
-
-    function updateProductSelectedDisplay() {
-      if (!productSelectedDisplayEl) return;
-      const list = Array.from(selectedProducts);
-      if (!list.length) {
-        productSelectedDisplayEl.textContent = '所有产品';
-        productSelectedDisplayEl.title = '所有产品';
-        return;
-      }
-      const text = list.join('，');
-      productSelectedDisplayEl.textContent = text;
-      productSelectedDisplayEl.title = text;
-    }
-
-    function rebuildProductOptions({ keepSelection = true } = {}) {
-      if (!productOptionListEl) return;
-      const prev = keepSelection ? new Set(selectedProducts) : new Set();
-      const keyword = safeText(productOptionSearchEl ? productOptionSearchEl.value : '').toLowerCase();
-      const allProducts = getAllProductsFromRows();
-      const filteredProducts = keyword
-        ? allProducts.filter(p => p.toLowerCase().includes(keyword))
-        : allProducts;
-
-      // keep selected values even when keyword filters list
-      selectedProducts = keepSelection ? new Set(prev) : new Set();
-      updateProductSelectedDisplay();
-
-      productOptionListEl.innerHTML = '';
-      for (const p of filteredProducts) {
-        const label = document.createElement('label');
-        label.className = 'product-option-item';
-
-        const text = document.createElement('span');
-        text.textContent = p;
-
-        const cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.value = p;
-        cb.checked = selectedProducts.has(p);
-        cb.setAttribute('data-product-checkbox', '1');
-
-        label.appendChild(text);
-        label.appendChild(cb); // checkbox on the right
-        productOptionListEl.appendChild(label);
-      }
-    }
-
-    let productPickerOpen = false;
-
-    function positionProductPickerPopover() {
-      if (!productPickerPopoverEl) return;
-      const anchor = productSelectedDisplayEl;
-      if (!anchor) return;
-      const rect = anchor.getBoundingClientRect();
-      const width = Math.max(360, rect.width);
-      const top = rect.bottom + 8;
-      // align right edge with search input
-      const left = Math.min(window.innerWidth - width - 12, rect.right - width);
-      productPickerPopoverEl.style.width = width + 'px';
-      productPickerPopoverEl.style.top = Math.max(8, top) + 'px';
-      productPickerPopoverEl.style.left = Math.max(8, left) + 'px';
-    }
-
-    function openProductPickerPopover() {
-      if (!productPickerPopoverEl) return;
-      productPickerOpen = true;
-      rebuildProductOptions({ keepSelection: true });
-      positionProductPickerPopover();
-      productPickerPopoverEl.style.display = 'block';
-      if (productOptionSearchEl) productOptionSearchEl.focus();
-    }
-
-    function closeProductPickerPopover() {
-      if (!productPickerPopoverEl) return;
-      productPickerOpen = false;
-      productPickerPopoverEl.style.display = 'none';
-    }
-
-    function toggleProductPickerPopover() {
-      if (productPickerOpen) closeProductPickerPopover();
-      else openProductPickerPopover();
-    }
-
     function switchPage(page) {
       const showDashboard = page === 'dashboard';
       const showDaily = page === 'blank';
@@ -1668,16 +1715,16 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
       if (navAccountRankBtn) navAccountRankBtn.classList.toggle('active', showAccountRank);
       if (navVideoRankBtn) navVideoRankBtn.classList.toggle('active', showVideoRank);
       if (navCompareBtn) navCompareBtn.classList.toggle('active', showCompare);
-      closeProductPickerPopover();
     }
 
     function applyTheme(theme) {
       const dark = theme === 'dark';
       document.body.classList.toggle('dktt-dark', dark);
       if (themeToggleBtn) {
-        themeToggleBtn.textContent = dark ? '☀' : '🌙';
+        themeToggleBtn.innerHTML = '<i data-lucide="' + (dark ? 'sun' : 'moon') + '" aria-hidden="true"></i>';
         themeToggleBtn.title = dark ? '切换白天版' : '切换黑夜版';
         themeToggleBtn.setAttribute('aria-label', dark ? '切换白天版' : '切换黑夜版');
+        refreshLucideIcons();
       }
       try { localStorage.setItem('dktt-theme', dark ? 'dark' : 'light'); } catch (_) {}
     }
@@ -1686,8 +1733,9 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
       const startVal = startDateEl.value;
       const endVal = endDateEl.value;
       const country = countrySelectEl.value;
-      const selectedProducts = getSelectedProducts();
-      const selectedSet = new Set(selectedProducts);
+      const account = productAccountSelectEl ? productAccountSelectEl.value : 'ALL';
+      const editor = productEditorSelectEl ? productEditorSelectEl.value : 'ALL';
+      const product = productProductSelectEl ? productProductSelectEl.value : 'ALL';
 
       const start = startVal ? new Date(startVal + 'T00:00:00') : null;
       const end = endVal ? new Date(endVal + 'T23:59:59') : null;
@@ -1696,7 +1744,9 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
         if (start && r.dateObj < start) return false;
         if (end && r.dateObj > end) return false;
         if (country !== 'ALL' && r.country !== country) return false;
-        if (selectedSet.size > 0 && !selectedSet.has(r.product)) return false;
+        if (account !== 'ALL' && (r.account || '') !== account) return false;
+        if (editor !== 'ALL' && (r.owner || '') !== editor) return false;
+        if (product !== 'ALL' && r.product !== product) return false;
         return true;
       });
     }
@@ -1777,27 +1827,25 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
 
       for (let i = 0; i < products.length; i++) {
         const p = products[i];
-        const moduleClass = i % 2 === 0 ? 'module-a' : 'module-b';
         const isExpanded = expanded.has(p.product);
         const productKey = encodeURIComponent(p.product);
 
         const tr = document.createElement('tr');
-        tr.className = moduleClass;
         tr.innerHTML = `
-          <td style="text-align:center;">
+          <td class="col-text">
             <div class="product-cell-inner">
               <button type="button" class="expandBtn" data-expand="${productKey}" style="min-width: 90px;">${isExpanded ? 'Collapse' : 'Expand'}</button>
-              <div style="text-align:center;">
+              <div>
                 <div style="font-weight:700;">${escapeHtml(p.product)}</div>
               </div>
             </div>
           </td>
-          <td class="numCell"><span class="numWrap">${formatCurrency(p.gmv)}</span></td>
-          <td class="numCell"><span class="numWrap">${formatNumber(p.orders)}</span></td>
-          <td class="numCell"><span class="numWrap">${formatNumber(p.play)}</span></td>
-          <td class="numCell"><span class="numWrap">${formatNumber(p.videoCount)}</span></td>
-          <td class="numCell"><span class="numWrap">${formatCurrency(p.commission)}</span></td>
-          <td style="text-align:center;">
+          <td class="col-num"><span class="numWrap">${formatCurrency(p.gmv)}</span></td>
+          <td class="col-num"><span class="numWrap">${formatNumber(p.orders)}</span></td>
+          <td class="col-num"><span class="numWrap">${formatNumber(p.play)}</span></td>
+          <td class="col-num"><span class="numWrap">${formatNumber(p.videoCount)}</span></td>
+          <td class="col-num"><span class="numWrap">${formatCurrency(p.commission)}</span></td>
+          <td class="col-text">
             <button type="button" class="btn-link top10ProductBtn" data-product="${productKey}">Top10 videos (product)</button>
           </td>
         `;
@@ -1805,7 +1853,7 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
 
         if (isExpanded) {
           const tr2 = document.createElement('tr');
-          tr2.className = `collapse-detail ${moduleClass}`;
+          tr2.className = 'collapse-detail';
 
           const owners = groupByOwnerForProduct(filtered, p.product);
           owners.sort(compareStrictSingleKey);
@@ -1837,7 +1885,7 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
           }).join('');
 
           tr2.innerHTML = `
-            <td colspan="7" style="text-align:right;">
+            <td colspan="7" class="col-text">
               <div style="padding: 8px 0 12px 0;">
                 <div style="padding: 0 0 8px 0; display:flex; justify-content:space-between; gap:10px; align-items:center;">
                   <div style="font-weight:700;">By owners (拍摄员贡献)</div>
@@ -1889,18 +1937,18 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
       sorted.forEach((r, i) => {
         top10Tbody.innerHTML += `
           <tr>
-            <td><span class="modalNum">${i + 1}</span></td>
-            <td>
+            <td class="col-num"><span class="modalNum">${i + 1}</span></td>
+            <td class="col-text">
               <div style="font-weight:600; margin-bottom:4px;">${escapeHtml(r.script || 'Video')}</div>
               <a href="${escapeHtml(r.videoUrl)}" target="_blank" rel="noreferrer" class="btn-link" style="text-decoration:none;">Open link</a>
             </td>
-            <td>${escapeHtml(r.dateStr)}</td>
-            <td>${escapeHtml(r.product)}</td>
-            <td>${escapeHtml(r.owner || 'Unknown')}</td>
-            <td><span class="modalNum">${formatNumber(r.orders)}</span></td>
-            <td><span class="modalNum">${formatCurrency(r.gmv)}</span></td>
-            <td><span class="modalNum">${formatNumber(r.play)}</span></td>
-            <td><span class="modalNum">${formatCurrency(r.commission)}</span></td>
+            <td class="col-text">${escapeHtml(r.dateStr)}</td>
+            <td class="col-text">${escapeHtml(r.product)}</td>
+            <td class="col-text">${escapeHtml(r.owner || 'Unknown')}</td>
+            <td class="col-num"><span class="modalNum">${formatNumber(r.orders)}</span></td>
+            <td class="col-num"><span class="modalNum">${formatCurrency(r.gmv)}</span></td>
+            <td class="col-num"><span class="modalNum">${formatNumber(r.play)}</span></td>
+            <td class="col-num"><span class="modalNum">${formatCurrency(r.commission)}</span></td>
           </tr>
         `;
       });
@@ -1972,34 +2020,89 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
       renderProducts();
     }
 
+    function populateProductAuxFilters() {
+      const accounts = Array.from(new Set(rows.map(r => r.account).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'zh-Hans'));
+      const owners = Array.from(new Set(rows.map(r => r.owner).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'zh-Hans'));
+      const countries = Array.from(new Set(rows.map(r => r.country).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'zh-Hans'));
+      const products = Array.from(new Set(rows.map(r => r.product).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'zh-Hans'));
+      if (productAccountSelectEl) upsertSelectOptions(productAccountSelectEl, accounts);
+      if (productEditorSelectEl) upsertSelectOptions(productEditorSelectEl, owners);
+      if (countrySelectEl) upsertSelectOptions(countrySelectEl, countries);
+      if (productProductSelectEl) upsertSelectOptions(productProductSelectEl, products);
+    }
+
     function resetFilters() {
       expanded = new Set();
-      if (productOptionSearchEl) productOptionSearchEl.value = '';
-      rebuildProductOptions({ keepSelection: false });
-      updateProductSelectedDisplay();
-      closeProductPickerPopover();
-      countrySelectEl.value = 'ALL';
+      if (productAccountSelectEl) productAccountSelectEl.value = 'ALL';
+      if (productEditorSelectEl) productEditorSelectEl.value = 'ALL';
+      if (productProductSelectEl) productProductSelectEl.value = 'ALL';
+      if (countrySelectEl) countrySelectEl.value = 'ALL';
+      populateProductAuxFilters();
       updateDateRangeFromRows();
+      setQuickDateActive('all');
       updateHeaderArrows();
       renderProducts();
     }
 
+    function resetDailyFilters() {
+      initDailyDateRange();
+      setDailyQuickDateActive('all');
+      if (dailyAccountSelectEl) dailyAccountSelectEl.value = 'ALL';
+      if (dailyEditorSelectEl) dailyEditorSelectEl.value = 'ALL';
+      if (dailyProductSelectEl) dailyProductSelectEl.value = 'ALL';
+      if (dailyCountrySelectEl) dailyCountrySelectEl.value = 'ALL';
+      dailyExpanded = { date: null, mode: null };
+      populateDailyFilters();
+      renderDailyTable();
+    }
+
+    function resetPeopleFilters() {
+      initPeopleDateRange();
+      setPeopleQuickDateActive('all');
+      if (peopleAccountSelectEl) peopleAccountSelectEl.value = 'ALL';
+      if (peopleEditorSelectEl) peopleEditorSelectEl.value = 'ALL';
+      if (peopleProductSelectEl) peopleProductSelectEl.value = 'ALL';
+      if (peopleCountrySelectEl) peopleCountrySelectEl.value = 'ALL';
+      peopleExpandedEditors = new Set();
+      populatePeopleFilters();
+      renderPeopleRanking();
+    }
+
+    function resetAccountRankFilters() {
+      initRangeFromDailyRows(accountRankStartDateEl, accountRankEndDateEl);
+      setAccountRankQuickDateActive('all');
+      if (accountRankAccountSelectEl) accountRankAccountSelectEl.value = 'ALL';
+      if (accountRankEditorSelectEl) accountRankEditorSelectEl.value = 'ALL';
+      if (accountRankProductSelectEl) accountRankProductSelectEl.value = 'ALL';
+      if (accountRankCountrySelectEl) accountRankCountrySelectEl.value = 'ALL';
+      accountRankExpanded = new Set();
+      populateAccountRankFilters();
+      renderAccountRanking();
+    }
+
+    function resetVideoRankFilters() {
+      initRangeFromDailyRows(videoRankStartDateEl, videoRankEndDateEl);
+      setVideoRankQuickDateActive('all');
+      if (videoRankAccountSelectEl) videoRankAccountSelectEl.value = 'ALL';
+      if (videoRankEditorSelectEl) videoRankEditorSelectEl.value = 'ALL';
+      if (videoRankProductSelectEl) videoRankProductSelectEl.value = 'ALL';
+      if (videoRankCountrySelectEl) videoRankCountrySelectEl.value = 'ALL';
+      videoRankExpanded = new Set();
+      populateVideoRankFilters();
+      renderVideoRanking();
+    }
+
     function setDataFromTsv(tsv) {
-      dataMsgEl.textContent = '';
-      dataMsgEl.className = 'msg';
       try {
         const parsed = parseTSV(tsv);
         if (!parsed.length) {
-          dataMsgEl.textContent = '加载失败：解析成功但没有任何有效行（请确认 TSV 表头和数据行）。';
-          dataMsgEl.className = 'msg error';
+          console.warn('产品数据：解析成功但没有任何有效行（请确认 TSV 表头和数据行）。');
           return;
         }
         rows = parsed;
         resetFilters();
-        dataMsgEl.textContent = `加载成功：共 ${rows.length} 条视频记录。`;
       } catch (err) {
-        dataMsgEl.textContent = '加载失败：' + (err && err.message ? err.message : String(err));
-        dataMsgEl.className = 'msg error';
+        console.error('产品数据加载失败：', err);
       }
     }
 
@@ -2119,24 +2222,24 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
         const isProduct = dailyExpanded.date === r.dateStr && dailyExpanded.mode === 'product';
         html.push(`
           <tr>
-            <td>${escapeHtml(r.dateStr)}</td>
-            <td class="numCell"><span class="numWrap">${formatUsd(r.gmv)}</span></td>
-            <td class="numCell"><span class="numWrap">${formatNumber(r.orders)}</span></td>
-            <td class="numCell"><span class="numWrap">${formatUsd(r.commission)}</span></td>
-            <td class="numCell"><span class="numWrap">${formatUsd(r.commissionGmv)}</span></td>
-            <td class="numCell"><span class="numWrap">${formatCurrency(r.gmvCny)}</span></td>
-            <td class="numCell"><span class="numWrap">${formatCurrency(r.commissionCny)}</span></td>
-            <td><button class="daily-expand-btn" data-date="${escapeHtml(r.dateStr)}" data-mode="video" type="button">${isVideo ? '收起' : '展开'}视频</button></td>
-            <td><button class="daily-expand-btn" data-date="${escapeHtml(r.dateStr)}" data-mode="product" type="button">${isProduct ? '收起' : '展开'}产品</button></td>
-            <td><button class="daily-expand-btn" data-date="${escapeHtml(r.dateStr)}" data-mode="editor" type="button">${isEditor ? '收起' : '展开'}拍剪员</button></td>
-            <td><button class="daily-expand-btn" data-date="${escapeHtml(r.dateStr)}" data-mode="account" type="button">${isPhone ? '收起' : '展开'}账号</button></td>
+            <td class="col-text">${escapeHtml(r.dateStr)}</td>
+            <td class="col-num"><span class="numWrap">${formatUsd(r.gmv)}</span></td>
+            <td class="col-num"><span class="numWrap">${formatNumber(r.orders)}</span></td>
+            <td class="col-num"><span class="numWrap">${formatUsd(r.commission)}</span></td>
+            <td class="col-num"><span class="numWrap">${formatUsd(r.commissionGmv)}</span></td>
+            <td class="col-num"><span class="numWrap">${formatCurrency(r.gmvCny)}</span></td>
+            <td class="col-num"><span class="numWrap">${formatCurrency(r.commissionCny)}</span></td>
+            <td class="col-text"><button class="daily-expand-btn" data-date="${escapeHtml(r.dateStr)}" data-mode="video" type="button">${isVideo ? '收起' : '展开'}视频</button></td>
+            <td class="col-text"><button class="daily-expand-btn" data-date="${escapeHtml(r.dateStr)}" data-mode="product" type="button">${isProduct ? '收起' : '展开'}产品</button></td>
+            <td class="col-text"><button class="daily-expand-btn" data-date="${escapeHtml(r.dateStr)}" data-mode="editor" type="button">${isEditor ? '收起' : '展开'}拍剪员</button></td>
+            <td class="col-text"><button class="daily-expand-btn" data-date="${escapeHtml(r.dateStr)}" data-mode="account" type="button">${isPhone ? '收起' : '展开'}账号</button></td>
           </tr>
         `);
         if (dailyExpanded.date === r.dateStr && dailyExpanded.mode) {
           html.push(renderDailySubrow(filtered, r.dateStr, dailyExpanded.mode));
         }
       }
-      dailyTbodyEl.innerHTML = html.join('') || '<tr><td colspan="11" class="muted">无数据</td></tr>';
+      dailyTbodyEl.innerHTML = html.join('') || '<tr><td colspan="11" class="muted col-text">无数据</td></tr>';
 
       const totalOrders = dateRows.reduce((s, r) => s + r.orders, 0);
       const totalGmv = dateRows.reduce((s, r) => s + r.gmv, 0);
@@ -2282,7 +2385,7 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
       const agg = Array.from(map.values()).sort((a, b) => b.gmv - a.gmv);
       const itemsHtml = agg.map(x => `
         <tr>
-          <td style="text-align:left; ${mode === 'video' ? 'white-space: nowrap;' : ''}">${mode === 'video'
+          <td class="col-text" style="${mode === 'video' ? 'white-space: nowrap;' : ''}">${mode === 'video'
             ? (() => {
                 const productText = Array.from(x.products || []).filter(Boolean).join('/');
                 const accountText = Array.from(x.accounts || []).filter(Boolean).join('/');
@@ -2293,12 +2396,12 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
                   : `<span class="muted">${escapeHtml(linkText)}</span>`;
               })()
             : escapeHtml(x.name)}</td>
-          <td class="numCell"><span class="numWrap">${formatUsd(x.gmv)}</span></td>
-          <td class="numCell"><span class="numWrap">${formatNumber(x.orders)}</span></td>
-          <td class="numCell"><span class="numWrap">${formatUsd(x.commission)}</span></td>
-          <td class="numCell"><span class="numWrap">${formatUsd(x.commissionGmv)}</span></td>
-          <td class="numCell"><span class="numWrap">${formatCurrency(x.gmvCny)}</span></td>
-          <td class="numCell"><span class="numWrap">${formatCurrency(x.commissionCny)}</span></td>
+          <td class="col-num"><span class="numWrap">${formatUsd(x.gmv)}</span></td>
+          <td class="col-num"><span class="numWrap">${formatNumber(x.orders)}</span></td>
+          <td class="col-num"><span class="numWrap">${formatUsd(x.commission)}</span></td>
+          <td class="col-num"><span class="numWrap">${formatUsd(x.commissionGmv)}</span></td>
+          <td class="col-num"><span class="numWrap">${formatCurrency(x.gmvCny)}</span></td>
+          <td class="col-num"><span class="numWrap">${formatCurrency(x.commissionCny)}</span></td>
         </tr>
       `).join('');
       return `
@@ -2307,19 +2410,19 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
             <div class="sub-wrap">
               <div style="font-weight:700; margin-bottom:8px; text-align:left;">${title}</div>
               <div class="table-wrap">
-                <table>
+                <table class="ln-subtable">
                   <thead>
                     <tr>
-                      <th style="text-align:left; ${mode === 'video' ? 'white-space: nowrap;' : ''}">${mode === 'video' ? '视频链接' : '名称'}</th>
-                      <th>GMV</th>
-                      <th>出单数量</th>
-                      <th>佣金</th>
-                      <th>佣金GMV</th>
-                      <th>GMV人民币</th>
-                      <th>佣金人民币</th>
+                      <th class="col-text" style="${mode === 'video' ? 'white-space: nowrap;' : ''}">${mode === 'video' ? '视频链接' : '名称'}</th>
+                      <th class="col-num">GMV</th>
+                      <th class="col-num">出单数量</th>
+                      <th class="col-num">佣金</th>
+                      <th class="col-num">佣金GMV</th>
+                      <th class="col-num">GMV人民币</th>
+                      <th class="col-num">佣金人民币</th>
                     </tr>
                   </thead>
-                  <tbody>${itemsHtml || '<tr><td colspan="7" class="muted">无数据</td></tr>'}</tbody>
+                  <tbody>${itemsHtml || '<tr><td colspan="7" class="muted col-text">无数据</td></tr>'}</tbody>
                 </table>
               </div>
             </div>
@@ -2547,6 +2650,13 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
     }
 
     function applyPeopleQuickDate(key) {
+      if (key === 'all') {
+        initPeopleDateRange();
+        setPeopleQuickDateActive('all');
+        peopleExpandedEditors = new Set();
+        renderPeopleRanking();
+        return;
+      }
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       let start = null;
@@ -2626,18 +2736,18 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
           : `<span class="muted">${escapeHtml(text)}</span>`;
         return `
           <tr>
-            <td><span class="modalNum">${i + 1}</span></td>
-            <td>${linkHtml}</td>
-            <td>${escapeHtml(r.dateStr || '')}</td>
-            <td>${escapeHtml(r.product || '')}</td>
-            <td>${escapeHtml(r.account || '')}</td>
-            <td>${escapeHtml(r.editor || '')}</td>
-            <td><span class="modalNum">${formatNumber(r.orders || 0)}</span></td>
-            <td><span class="modalNum">${formatUsd(r.gmv || 0)}</span></td>
-            <td><span class="modalNum">${formatUsd(r.commission || 0)}</span></td>
+            <td class="col-num"><span class="modalNum">${i + 1}</span></td>
+            <td class="col-text">${linkHtml}</td>
+            <td class="col-text">${escapeHtml(r.dateStr || '')}</td>
+            <td class="col-text">${escapeHtml(r.product || '')}</td>
+            <td class="col-text">${escapeHtml(r.account || '')}</td>
+            <td class="col-text">${escapeHtml(r.editor || '')}</td>
+            <td class="col-num"><span class="modalNum">${formatNumber(r.orders || 0)}</span></td>
+            <td class="col-num"><span class="modalNum">${formatUsd(r.gmv || 0)}</span></td>
+            <td class="col-num"><span class="modalNum">${formatUsd(r.commission || 0)}</span></td>
           </tr>
         `;
-      }).join('') || '<tr><td colspan="9" class="muted">无数据</td></tr>';
+      }).join('') || '<tr><td colspan="9" class="muted col-text">无数据</td></tr>';
       peopleTop10ModalOverlayEl.style.display = 'flex';
     }
 
@@ -2663,15 +2773,15 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
         const isExpanded = peopleExpandedEditors.has(p.editor);
         html.push(`
           <tr>
-            <td style="text-align:left;">${escapeHtml(p.editor)}</td>
-            <td class="numCell"><span class="numWrap">${formatUsd(p.gmv)}</span></td>
-            <td class="numCell"><span class="numWrap">${formatNumber(p.orders)}</span></td>
-            <td class="numCell"><span class="numWrap">${formatUsd(p.commission)}</span></td>
-            <td class="numCell"><span class="numWrap">${formatUsd(p.commissionGmv)}</span></td>
-            <td class="numCell"><span class="numWrap">${formatCurrency(p.gmvCny)}</span></td>
-            <td class="numCell"><span class="numWrap">${formatCurrency(p.commissionCny)}</span></td>
-            <td><button type="button" class="btn-link peopleTop10Btn" data-editor="${editorKey}">前10视频</button></td>
-            <td><button type="button" class="btn-link peopleExpandBtn" data-editor="${editorKey}">${isExpanded ? '收起' : '展开'}产品贡献</button></td>
+            <td class="col-text">${escapeHtml(p.editor)}</td>
+            <td class="col-num"><span class="numWrap">${formatUsd(p.gmv)}</span></td>
+            <td class="col-num"><span class="numWrap">${formatNumber(p.orders)}</span></td>
+            <td class="col-num"><span class="numWrap">${formatUsd(p.commission)}</span></td>
+            <td class="col-num"><span class="numWrap">${formatUsd(p.commissionGmv)}</span></td>
+            <td class="col-num"><span class="numWrap">${formatCurrency(p.gmvCny)}</span></td>
+            <td class="col-num"><span class="numWrap">${formatCurrency(p.commissionCny)}</span></td>
+            <td class="col-text"><button type="button" class="btn-link peopleTop10Btn" data-editor="${editorKey}">前10视频</button></td>
+            <td class="col-text"><button type="button" class="btn-link peopleExpandBtn" data-editor="${editorKey}">${isExpanded ? '收起' : '展开'}产品贡献</button></td>
           </tr>
         `);
 
@@ -2691,14 +2801,14 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
           const prodRows = Array.from(productsMap.values()).sort((a, b) => (b.orders - a.orders) || (b.gmv - a.gmv));
           const subHtml = prodRows.map(pr => `
             <tr>
-              <td style="text-align:left;">${escapeHtml(pr.product)}</td>
-              <td class="numCell"><span class="numWrap">${formatUsd(pr.gmv)}</span></td>
-              <td class="numCell"><span class="numWrap">${formatNumber(pr.orders)}</span></td>
-              <td class="numCell"><span class="numWrap">${formatUsd(pr.commission)}</span></td>
-              <td class="numCell"><span class="numWrap">${formatUsd(pr.commissionGmv)}</span></td>
-              <td class="numCell"><span class="numWrap">${formatCurrency(pr.gmvCny)}</span></td>
-              <td class="numCell"><span class="numWrap">${formatCurrency(pr.commissionCny)}</span></td>
-              <td><button type="button" class="btn-link peopleProductTop10Btn" data-editor="${editorKey}" data-product="${encodeURIComponent(pr.product)}">产品前10视频</button></td>
+              <td class="col-text">${escapeHtml(pr.product)}</td>
+              <td class="col-num"><span class="numWrap">${formatUsd(pr.gmv)}</span></td>
+              <td class="col-num"><span class="numWrap">${formatNumber(pr.orders)}</span></td>
+              <td class="col-num"><span class="numWrap">${formatUsd(pr.commission)}</span></td>
+              <td class="col-num"><span class="numWrap">${formatUsd(pr.commissionGmv)}</span></td>
+              <td class="col-num"><span class="numWrap">${formatCurrency(pr.gmvCny)}</span></td>
+              <td class="col-num"><span class="numWrap">${formatCurrency(pr.commissionCny)}</span></td>
+              <td class="col-text"><button type="button" class="btn-link peopleProductTop10Btn" data-editor="${editorKey}" data-product="${encodeURIComponent(pr.product)}">产品前10视频</button></td>
             </tr>
           `).join('');
           html.push(`
@@ -2707,20 +2817,20 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
                 <div class="sub-wrap">
                   <div style="font-weight:700; margin-bottom:8px; text-align:left;">${escapeHtml(p.editor)} 的产品贡献</div>
                   <div class="table-wrap">
-                    <table>
+                    <table class="ln-subtable">
                       <thead>
                         <tr>
-                          <th style="text-align:left;">产品</th>
-                          <th>GMV</th>
-                          <th>出单数量</th>
-                          <th>佣金</th>
-                          <th>佣金GMV</th>
-                          <th>GMV人民币</th>
-                          <th>佣金人民币</th>
-                          <th>前10视频</th>
+                          <th class="col-text">产品</th>
+                          <th class="col-num">GMV</th>
+                          <th class="col-num">出单数量</th>
+                          <th class="col-num">佣金</th>
+                          <th class="col-num">佣金GMV</th>
+                          <th class="col-num">GMV人民币</th>
+                          <th class="col-num">佣金人民币</th>
+                          <th class="col-text">前10视频</th>
                         </tr>
                       </thead>
-                      <tbody>${subHtml || '<tr><td colspan="8" class="muted">无数据</td></tr>'}</tbody>
+                      <tbody>${subHtml || '<tr><td colspan="8" class="muted col-text">无数据</td></tr>'}</tbody>
                     </table>
                   </div>
                 </div>
@@ -2729,7 +2839,7 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
           `);
         }
       }
-      peopleTbodyEl.innerHTML = html.join('') || '<tr><td colspan="9" class="muted">无数据</td></tr>';
+      peopleTbodyEl.innerHTML = html.join('') || '<tr><td colspan="9" class="muted col-text">无数据</td></tr>';
 
       peopleTbodyEl.querySelectorAll('.peopleExpandBtn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -2822,6 +2932,12 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
     }
 
     function setQuickDateToRange(key, startEl, endEl, setActiveFn, rerenderFn) {
+      if (key === 'all') {
+        initRangeFromDailyRows(startEl, endEl);
+        setActiveFn('all');
+        rerenderFn();
+        return;
+      }
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       let start = null;
@@ -2916,13 +3032,13 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
           ? `<a href="${escapeHtml(r.videoUrl)}" target="_blank" rel="noreferrer" class="btn-link" style="text-decoration:none;">${escapeHtml(text)}</a>`
           : `<span class="muted">${escapeHtml(text)}</span>`;
         return `<tr>
-          <td><span class="modalNum">${i + 1}</span></td><td>${linkHtml}</td><td>${escapeHtml(r.dateStr || '')}</td>
-          <td>${escapeHtml(r.product || '')}</td><td>${escapeHtml(r.account || '')}</td><td>${escapeHtml(r.editor || '')}</td>
-          <td><span class="modalNum">${formatNumber(r.orders || 0)}</span></td>
-          <td><span class="modalNum">${formatUsd(r.gmv || 0)}</span></td>
-          <td><span class="modalNum">${formatUsd(r.commission || 0)}</span></td>
+          <td class="col-num"><span class="modalNum">${i + 1}</span></td><td class="col-text">${linkHtml}</td><td class="col-text">${escapeHtml(r.dateStr || '')}</td>
+          <td class="col-text">${escapeHtml(r.product || '')}</td><td class="col-text">${escapeHtml(r.account || '')}</td><td class="col-text">${escapeHtml(r.editor || '')}</td>
+          <td class="col-num"><span class="modalNum">${formatNumber(r.orders || 0)}</span></td>
+          <td class="col-num"><span class="modalNum">${formatUsd(r.gmv || 0)}</span></td>
+          <td class="col-num"><span class="modalNum">${formatUsd(r.commission || 0)}</span></td>
         </tr>`;
-      }).join('') || '<tr><td colspan="9" class="muted">无数据</td></tr>';
+      }).join('') || '<tr><td colspan="9" class="muted col-text">无数据</td></tr>';
       peopleTop10ModalOverlayEl.style.display = 'flex';
     }
 
@@ -2942,15 +3058,15 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
         const key = encodeURIComponent(x.account);
         const ex = accountRankExpanded.has(x.account);
         html.push(`<tr>
-          <td style="text-align:left;">${escapeHtml(x.account)}</td>
-          <td class="numCell"><span class="numWrap">${formatUsd(x.gmv)}</span></td>
-          <td class="numCell"><span class="numWrap">${formatNumber(x.orders)}</span></td>
-          <td class="numCell"><span class="numWrap">${formatUsd(x.commission)}</span></td>
-          <td class="numCell"><span class="numWrap">${formatUsd(x.commissionGmv)}</span></td>
-          <td class="numCell"><span class="numWrap">${formatCurrency(x.gmvCny)}</span></td>
-          <td class="numCell"><span class="numWrap">${formatCurrency(x.commissionCny)}</span></td>
-          <td><button type="button" class="btn-link accountTop10Btn" data-account="${key}">前10视频</button></td>
-          <td><button type="button" class="btn-link accountExpandBtn" data-account="${key}">${ex ? '收起' : '展开'}产品贡献</button></td>
+          <td class="col-text">${escapeHtml(x.account)}</td>
+          <td class="col-num"><span class="numWrap">${formatUsd(x.gmv)}</span></td>
+          <td class="col-num"><span class="numWrap">${formatNumber(x.orders)}</span></td>
+          <td class="col-num"><span class="numWrap">${formatUsd(x.commission)}</span></td>
+          <td class="col-num"><span class="numWrap">${formatUsd(x.commissionGmv)}</span></td>
+          <td class="col-num"><span class="numWrap">${formatCurrency(x.gmvCny)}</span></td>
+          <td class="col-num"><span class="numWrap">${formatCurrency(x.commissionCny)}</span></td>
+          <td class="col-text"><button type="button" class="btn-link accountTop10Btn" data-account="${key}">前10视频</button></td>
+          <td class="col-text"><button type="button" class="btn-link accountExpandBtn" data-account="${key}">${ex ? '收起' : '展开'}产品贡献</button></td>
         </tr>`);
         if (ex) {
           const pmap = new Map();
@@ -2961,17 +3077,17 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
             a.gmv += r.gmv || 0; a.orders += r.orders || 0; a.commission += r.commission || 0; a.commissionGmv += r.commissionGmv || 0; a.gmvCny += r.gmvCny || 0; a.commissionCny += r.commissionCny || 0;
           });
           const sub = Array.from(pmap.values()).sort((a, b) => (b.orders - a.orders) || (b.gmv - a.gmv)).map(pr => `<tr>
-            <td style="text-align:left;">${escapeHtml(pr.product)}</td><td class="numCell"><span class="numWrap">${formatUsd(pr.gmv)}</span></td>
-            <td class="numCell"><span class="numWrap">${formatNumber(pr.orders)}</span></td><td class="numCell"><span class="numWrap">${formatUsd(pr.commission)}</span></td>
-            <td class="numCell"><span class="numWrap">${formatUsd(pr.commissionGmv)}</span></td><td class="numCell"><span class="numWrap">${formatCurrency(pr.gmvCny)}</span></td>
-            <td class="numCell"><span class="numWrap">${formatCurrency(pr.commissionCny)}</span></td>
-            <td><button type="button" class="btn-link accountProductTop10Btn" data-account="${key}" data-product="${encodeURIComponent(pr.product)}">产品前10视频</button></td></tr>`).join('');
-          html.push(`<tr class="daily-subrow"><td colspan="9"><div class="sub-wrap"><div style="font-weight:700; margin-bottom:8px; text-align:left;">${escapeHtml(x.account)} 的产品贡献</div><div class="table-wrap"><table><thead><tr>
-            <th style="text-align:left;">产品</th><th>GMV</th><th>出单数量</th><th>佣金</th><th>佣金GMV</th><th>GMV人民币</th><th>佣金人民币</th><th>前10视频</th>
-          </tr></thead><tbody>${sub || '<tr><td colspan="8" class="muted">无数据</td></tr>'}</tbody></table></div></div></td></tr>`);
+            <td class="col-text">${escapeHtml(pr.product)}</td><td class="col-num"><span class="numWrap">${formatUsd(pr.gmv)}</span></td>
+            <td class="col-num"><span class="numWrap">${formatNumber(pr.orders)}</span></td><td class="col-num"><span class="numWrap">${formatUsd(pr.commission)}</span></td>
+            <td class="col-num"><span class="numWrap">${formatUsd(pr.commissionGmv)}</span></td><td class="col-num"><span class="numWrap">${formatCurrency(pr.gmvCny)}</span></td>
+            <td class="col-num"><span class="numWrap">${formatCurrency(pr.commissionCny)}</span></td>
+            <td class="col-text"><button type="button" class="btn-link accountProductTop10Btn" data-account="${key}" data-product="${encodeURIComponent(pr.product)}">产品前10视频</button></td></tr>`).join('');
+          html.push(`<tr class="daily-subrow"><td colspan="9"><div class="sub-wrap"><div style="font-weight:600; margin-bottom:8px; text-align:left;">${escapeHtml(x.account)} 的产品贡献</div><div class="table-wrap"><table class="ln-subtable"><thead><tr>
+            <th class="col-text">产品</th><th class="col-num">GMV</th><th class="col-num">出单数量</th><th class="col-num">佣金</th><th class="col-num">佣金GMV</th><th class="col-num">GMV人民币</th><th class="col-num">佣金人民币</th><th class="col-text">前10视频</th>
+          </tr></thead><tbody>${sub || '<tr><td colspan="8" class="muted col-text">无数据</td></tr>'}</tbody></table></div></div></td></tr>`);
         }
       }
-      accountRankTbodyEl.innerHTML = html.join('') || '<tr><td colspan="9" class="muted">无数据</td></tr>';
+      accountRankTbodyEl.innerHTML = html.join('') || '<tr><td colspan="9" class="muted col-text">无数据</td></tr>';
       accountRankTbodyEl.querySelectorAll('.accountExpandBtn').forEach(btn => btn.addEventListener('click', () => {
         const key = decodeURIComponent(btn.getAttribute('data-account') || ''); if (!key) return;
         if (accountRankExpanded.has(key)) accountRankExpanded.delete(key); else accountRankExpanded.add(key);
@@ -3006,16 +3122,16 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
           ? `<a href="${escapeHtml(x.videoUrl)}" target="_blank" rel="noreferrer" class="btn-link" style="text-decoration:none; white-space:nowrap;">${escapeHtml(x.label)}</a>`
           : `<span style="white-space:nowrap;">${escapeHtml(x.label)}</span>`;
         return `<tr>
-          <td style="text-align:left;">${labelHtml}</td>
-          <td class="numCell"><span class="numWrap">${formatUsd(x.gmv)}</span></td>
-          <td class="numCell"><span class="numWrap">${formatNumber(x.orders)}</span></td>
-          <td class="numCell"><span class="numWrap">${formatUsd(x.commission)}</span></td>
-          <td class="numCell"><span class="numWrap">${formatUsd(x.commissionGmv)}</span></td>
-          <td class="numCell"><span class="numWrap">${formatCurrency(x.gmvCny)}</span></td>
-          <td class="numCell"><span class="numWrap">${formatCurrency(x.commissionCny)}</span></td>
+          <td class="col-text">${labelHtml}</td>
+          <td class="col-num"><span class="numWrap">${formatUsd(x.gmv)}</span></td>
+          <td class="col-num"><span class="numWrap">${formatNumber(x.orders)}</span></td>
+          <td class="col-num"><span class="numWrap">${formatUsd(x.commission)}</span></td>
+          <td class="col-num"><span class="numWrap">${formatUsd(x.commissionGmv)}</span></td>
+          <td class="col-num"><span class="numWrap">${formatCurrency(x.gmvCny)}</span></td>
+          <td class="col-num"><span class="numWrap">${formatCurrency(x.commissionCny)}</span></td>
         </tr>`;
       });
-      videoRankTbodyEl.innerHTML = html.join('') || '<tr><td colspan="7" class="muted">无数据</td></tr>';
+      videoRankTbodyEl.innerHTML = html.join('') || '<tr><td colspan="7" class="muted col-text">无数据</td></tr>';
     }
 
     function getDailyRange() {
@@ -3067,11 +3183,12 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
             <div class="field" style="min-width:150px;"><label>产品</label><select data-field="product">${buildSelectOptions(products, c.product)}</select></div>
             <div class="field" style="min-width:130px;"><label>国家</label><select data-field="country">${buildSelectOptions(countries, c.country)}</select></div>
             <div class="field" style="min-width:150px;"><label>设备关键词</label><input data-field="deviceKeyword" value="${escapeHtml(c.deviceKeyword)}" placeholder="匹配账号字段"/></div>
-            <div class="field"><label>&nbsp;</label><button type="button" data-remove-id="${c.id}" ${compareConditions.length <= 1 ? 'disabled' : ''}>- 删除</button></div>
+            <div class="field"><label>&nbsp;</label><button type="button" data-remove-id="${c.id}" ${compareConditions.length <= 1 ? 'disabled' : ''}><i data-lucide="trash-2"></i>删除</button></div>
           </div>
         </div>
       `).join('');
       if (removeCompareConditionBtn) removeCompareConditionBtn.disabled = compareConditions.length <= 1;
+      refreshLucideIcons();
     }
 
     function rowsForCompareCondition(c) {
@@ -3157,12 +3274,9 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
         renderPeopleRanking();
         renderAccountRanking();
         renderVideoRanking();
-        dailyDataMsgEl.textContent = `每日数据已加载：${dailyRows.length} 条`;
-        dailyDataMsgEl.className = 'msg';
         return true;
       } catch (e) {
-        dailyDataMsgEl.textContent = '每日数据加载失败：' + (e && e.message ? e.message : String(e));
-        dailyDataMsgEl.className = 'msg error';
+        console.error('每日数据加载失败：', e);
         return false;
       }
     }
@@ -3174,21 +3288,16 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
         const tsv = await res.text();
         if (!tsv || !tsv.trim()) throw new Error('empty');
         setDailyDataFromTsv(tsv);
-        if (dailyDataInputEl) dailyDataInputEl.value = tsv;
       } catch (e) {
         setDailyDataFromTsv(DEFAULT_DAILY_TSV_TEMPLATE);
-        if (dailyDataInputEl) dailyDataInputEl.value = DEFAULT_DAILY_TSV_TEMPLATE;
       }
     }
 
     async function loadInitialData() {
-      // When opened as file://, browsers often block fetching sibling files.
-      // In that case, fall back to template and let user paste data via "更新数据".
+      // When opened as file://, browsers often block fetching sibling files — fall back to embedded template.
       if (location && location.protocol === 'file:') {
         setDataFromTsv(DEFAULT_TSV_TEMPLATE);
-        dataMsgEl.textContent = '本地 file:// 打开时无法自动读取 data.tsv；请点“更新数据”粘贴，或用本地服务器方式打开。';
-        dataMsgEl.className = 'msg';
-        dataInputEl.value = DEFAULT_TSV_TEMPLATE;
+        console.warn('本地 file:// 打开时无法自动读取 data.tsv；请使用本地 HTTP 服务打开页面以加载同目录 data.tsv。');
         return;
       }
 
@@ -3198,12 +3307,9 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
         const tsv = await res.text();
         if (!tsv || !tsv.trim()) throw new Error('empty');
         setDataFromTsv(tsv);
-        dataInputEl.value = tsv;
       } catch (e) {
         setDataFromTsv(DEFAULT_TSV_TEMPLATE);
-        dataMsgEl.textContent = '未读取到 data.tsv，已使用页面内置示例数据。';
-        dataMsgEl.className = 'msg';
-        dataInputEl.value = DEFAULT_TSV_TEMPLATE;
+        console.warn('未读取到 data.tsv，已使用页面内置示例数据。', e);
       }
     }
 
@@ -3211,75 +3317,12 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
     closeModalBtn.addEventListener('click', () => modalOverlay.style.display = 'none');
     modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) modalOverlay.style.display = 'none'; });
 
-    function openDataModal() {
-      dataModalOverlay.style.display = 'flex';
-    }
-    function closeDataModal() {
-      dataModalOverlay.style.display = 'none';
-    }
-    openDataModalBtn.addEventListener('click', () => openDataModal());
-    closeDataModalBtn.addEventListener('click', () => closeDataModal());
-    dataModalOverlay.addEventListener('click', (e) => { if (e.target === dataModalOverlay) closeDataModal(); });
-    if (openDailyDataModalBtn) openDailyDataModalBtn.addEventListener('click', () => { dailyDataModalOverlay.style.display = 'flex'; });
-    if (closeDailyDataModalBtn) closeDailyDataModalBtn.addEventListener('click', () => { dailyDataModalOverlay.style.display = 'none'; });
-    if (dailyDataModalOverlay) dailyDataModalOverlay.addEventListener('click', (e) => { if (e.target === dailyDataModalOverlay) dailyDataModalOverlay.style.display = 'none'; });
+    if (resetFiltersBtn) resetFiltersBtn.addEventListener('click', () => resetFilters());
+    if (dailyResetFiltersBtn) dailyResetFiltersBtn.addEventListener('click', () => resetDailyFilters());
+    if (peopleResetFiltersBtn) peopleResetFiltersBtn.addEventListener('click', () => resetPeopleFilters());
+    if (accountRankResetFiltersBtn) accountRankResetFiltersBtn.addEventListener('click', () => resetAccountRankFilters());
+    if (videoRankResetFiltersBtn) videoRankResetFiltersBtn.addEventListener('click', () => resetVideoRankFilters());
 
-    loadDataBtn.addEventListener('click', () => {
-      const tsv = (dataInputEl.value || '').trim();
-      if (!tsv) {
-        dataMsgEl.textContent = '请先粘贴 TSV 数据（包含表头）。';
-        dataMsgEl.className = 'msg error';
-        return;
-      }
-      setDataFromTsv(tsv);
-      // close modal on successful parse (best-effort: if still error, msg will show)
-      if (dataMsgEl.className !== 'msg error') closeDataModal();
-    });
-    resetFiltersBtn.addEventListener('click', () => resetFilters());
-    if (loadDailyDataBtn) {
-      loadDailyDataBtn.addEventListener('click', () => {
-        const tsv = (dailyDataInputEl && dailyDataInputEl.value ? dailyDataInputEl.value : '').trim();
-        if (!tsv) {
-          dailyDataMsgEl.textContent = '请先粘贴每日数据 TSV。';
-          dailyDataMsgEl.className = 'msg error';
-          return;
-        }
-        const ok = setDailyDataFromTsv(tsv);
-        if (ok) dailyDataModalOverlay.style.display = 'none';
-      });
-    }
-
-    if (productOptionSearchEl) {
-      productOptionSearchEl.addEventListener('input', () => {
-        // only filter option list UI, keep selected items selected
-        rebuildProductOptions({ keepSelection: true });
-        if (productPickerOpen) positionProductPickerPopover();
-      });
-    }
-    if (productOptionListEl) {
-      productOptionListEl.addEventListener('change', (e) => {
-        const t = e.target;
-        if (!t || t.getAttribute('data-product-checkbox') !== '1') return;
-        const value = t.value;
-        if (t.checked) selectedProducts.add(value);
-        else selectedProducts.delete(value);
-        updateProductSelectedDisplay();
-        expanded = new Set();
-        renderProducts();
-      });
-    }
-    if (clearProductSelectionBtn) {
-      clearProductSelectionBtn.addEventListener('click', () => {
-        selectedProducts = new Set();
-        rebuildProductOptions({ keepSelection: true });
-        updateProductSelectedDisplay();
-        expanded = new Set();
-        renderProducts();
-      });
-    }
-    if (toggleProductPickerBtn) {
-      toggleProductPickerBtn.addEventListener('click', () => toggleProductPickerPopover());
-    }
     if (navDashboardBtn) navDashboardBtn.addEventListener('click', () => switchPage('dashboard'));
     if (navBlankBtn) navBlankBtn.addEventListener('click', () => switchPage('blank'));
     if (navPeopleBtn) navPeopleBtn.addEventListener('click', () => switchPage('people'));
@@ -3292,26 +3335,13 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
         applyTheme(isDark ? 'light' : 'dark');
       });
     }
-    if (productSelectedDisplayEl) {
-      productSelectedDisplayEl.addEventListener('click', () => toggleProductPickerPopover());
-    }
-    if (closeProductPickerBtn) {
-      closeProductPickerBtn.addEventListener('click', () => closeProductPickerPopover());
-    }
     window.addEventListener('resize', () => {
-      if (productPickerOpen) positionProductPickerPopover();
       syncDashboardTotalsColumns();
     });
-    window.addEventListener('scroll', () => { if (productPickerOpen) positionProductPickerPopover(); }, true);
-    document.addEventListener('mousedown', (e) => {
-      if (!productPickerOpen) return;
-      const t = e.target;
-      const insidePopover = productPickerPopoverEl && productPickerPopoverEl.contains(t);
-      const insideAnchor = productSelectedDisplayEl && productSelectedDisplayEl.contains(t);
-      const insideButton = toggleProductPickerBtn && toggleProductPickerBtn.contains(t);
-      if (!insidePopover && !insideAnchor && !insideButton) closeProductPickerPopover();
-    });
     countrySelectEl.addEventListener('change', () => { expanded = new Set(); renderProducts(); });
+    if (productAccountSelectEl) productAccountSelectEl.addEventListener('change', () => { expanded = new Set(); renderProducts(); });
+    if (productEditorSelectEl) productEditorSelectEl.addEventListener('change', () => { expanded = new Set(); renderProducts(); });
+    if (productProductSelectEl) productProductSelectEl.addEventListener('change', () => { expanded = new Set(); renderProducts(); });
     [startDateEl, endDateEl].forEach(el => el.addEventListener('change', () => {
       // manual change -> custom
       setQuickDateActive(null);
@@ -3469,10 +3499,9 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
 
     // Init
     (async function init() {
-      let savedTheme = 'light';
-      try { savedTheme = localStorage.getItem('dktt-theme') || 'light'; } catch (_) {}
+      let savedTheme = 'dark';
+      try { savedTheme = localStorage.getItem('dktt-theme') || 'dark'; } catch (_) {}
       applyTheme(savedTheme === 'dark' ? 'dark' : 'light');
-      dataInputEl.value = DEFAULT_TSV_TEMPLATE;
       initHeaderSorting();
       initDailyHeaderSorting();
       initPeopleHeaderSorting();
@@ -3485,7 +3514,6 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
       updateVideoHeaderArrows();
       await loadInitialData();
       await loadInitialDailyData();
-      updateProductSelectedDisplay();
       setQuickDateActive('all');
       setDailyQuickDateActive('all');
       setDailyChartModeActive('usd');
