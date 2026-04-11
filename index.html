@@ -584,7 +584,7 @@
 
     /* ===== Gemini-inspired visual skin (day/night) ===== */
     :root {
-      --gem-bg: #f7f9fc;
+      --gem-bg: #ffffff;
       --gem-card: #ffffff;
       --gem-card-soft: #ffffff;
       --gem-border: #dce3f0;
@@ -597,7 +597,7 @@
       --gem-row-hover: #f0f4ff;
       --gem-accent-a: #6f7dff;
       --gem-accent-b: #5fd5ec;
-      --gem-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      --gem-shadow: none;
       --gem-nav-hover-bg: rgba(99, 102, 241, 0.12);
       --gem-nav-hover-text: #1f2a44;
       --gem-nav-active-text: #1f2a44;
@@ -669,13 +669,17 @@
     }
     .theme-toggle-btn:hover { background: var(--gem-nav-hover-bg); }
 
-    .daily-wrap, .blank-page, .chart-card, .table-wrap, .totals-grid, .detail-card, .popover, .modal, .compare-row {
+    .chart-card, .table-wrap, .totals-grid, .detail-card, .popover, .modal, .compare-row {
       background: var(--gem-card);
       border-color: var(--gem-border);
       box-shadow: var(--gem-shadow);
       backdrop-filter: blur(10px);
     }
-    .blank-page { border-style: solid; }
+    .daily-wrap, .blank-page, #dashboardPage, #blankPage, #peoplePage, #accountRankPage, #videoRankPage, #comparePage {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
     .app-main h2, .chart-title, .modal-title { color: var(--gem-heading); letter-spacing: 0.2px; }
     .muted, .msg, label, .totals-label { color: var(--gem-muted) !important; }
 
