@@ -582,8 +582,28 @@
     body.dktt-dark ::-webkit-scrollbar-thumb { background: #343434; border-radius: 999px; }
     body.dktt-dark ::-webkit-scrollbar-track { background: #111; }
 
-    /* ===== Gemini-inspired visual skin (style-only override) ===== */
+    /* ===== Gemini-inspired visual skin (day/night) ===== */
     :root {
+      --gem-bg: #f7f9fc;
+      --gem-card: #ffffff;
+      --gem-card-soft: #ffffff;
+      --gem-border: #dce3f0;
+      --gem-border-strong: #9fb3ff;
+      --gem-text: #0f172a;
+      --gem-muted: #5f6b82;
+      --gem-link: #4f46e5;
+      --gem-heading: #0b1222;
+      --gem-input-bg: #ffffff;
+      --gem-row-hover: #f0f4ff;
+      --gem-accent-a: #6f7dff;
+      --gem-accent-b: #5fd5ec;
+      --gem-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      --gem-nav-hover-bg: rgba(99, 102, 241, 0.12);
+      --gem-nav-hover-text: #1f2a44;
+      --gem-nav-active-text: #1f2a44;
+    }
+
+    body.dktt-dark {
       --gem-bg: radial-gradient(1200px 500px at 75% -20%, rgba(122, 128, 255, 0.22), transparent 60%),
                 radial-gradient(800px 480px at -5% 0%, rgba(73, 193, 255, 0.15), transparent 58%),
                 #0b1020;
@@ -591,10 +611,16 @@
       --gem-card-soft: rgba(30, 41, 59, 0.62);
       --gem-border: rgba(148, 163, 184, 0.24);
       --gem-border-strong: rgba(165, 180, 252, 0.5);
-      --gem-text: #e5ecff;
+      --gem-text: #eef3ff;
       --gem-muted: #9ca8c7;
-      --gem-accent: #8b9cff;
-      --gem-accent-2: #67e8f9;
+      --gem-link: #a5b4fc;
+      --gem-heading: #f8faff;
+      --gem-input-bg: rgba(15, 23, 42, 0.72);
+      --gem-row-hover: rgba(99, 102, 241, 0.08);
+      --gem-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 10px 26px rgba(2, 6, 23, 0.3);
+      --gem-nav-hover-bg: rgba(139, 156, 255, 0.12);
+      --gem-nav-hover-text: #eff4ff;
+      --gem-nav-active-text: #ffffff;
     }
 
     body {
@@ -610,7 +636,7 @@
       background: var(--gem-card-soft);
       border-color: var(--gem-border);
       border-radius: 18px;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 14px 30px rgba(3, 7, 18, 0.35);
+      box-shadow: var(--gem-shadow);
       backdrop-filter: blur(14px);
     }
     .left-brand { border-bottom-color: var(--gem-border); }
@@ -625,48 +651,48 @@
       transition: all 0.2s ease;
     }
     .nav-btn:hover {
-      background: rgba(139, 156, 255, 0.12);
-      border-color: rgba(139, 156, 255, 0.35);
-      color: #eff4ff;
+      background: var(--gem-nav-hover-bg);
+      border-color: var(--gem-border-strong);
+      color: var(--gem-nav-hover-text);
     }
     .nav-btn.active {
-      background: linear-gradient(135deg, rgba(139, 156, 255, 0.32), rgba(103, 232, 249, 0.2));
+      background: linear-gradient(135deg, rgba(139, 156, 255, 0.28), rgba(103, 232, 249, 0.2));
       border-color: var(--gem-border-strong);
-      color: #ffffff;
-      box-shadow: 0 8px 20px rgba(76, 102, 255, 0.25);
+      color: var(--gem-nav-active-text);
+      box-shadow: 0 8px 20px rgba(76, 102, 255, 0.2);
     }
 
     .theme-toggle-btn {
-      background: rgba(148, 163, 184, 0.12);
+      background: var(--gem-input-bg);
       border-color: var(--gem-border);
-      color: #fff;
+      color: var(--gem-text);
     }
-    .theme-toggle-btn:hover { background: rgba(139, 156, 255, 0.2); }
+    .theme-toggle-btn:hover { background: var(--gem-nav-hover-bg); }
 
     .daily-wrap, .blank-page, .chart-card, .table-wrap, .totals-grid, .detail-card, .popover, .modal, .compare-row {
       background: var(--gem-card);
       border-color: var(--gem-border);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 10px 26px rgba(2, 6, 23, 0.3);
+      box-shadow: var(--gem-shadow);
       backdrop-filter: blur(10px);
     }
     .blank-page { border-style: solid; }
-    .app-main h2, .chart-title, .modal-title { color: #f6f8ff; letter-spacing: 0.2px; }
+    .app-main h2, .chart-title, .modal-title { color: var(--gem-heading); letter-spacing: 0.2px; }
     .muted, .msg, label, .totals-label { color: var(--gem-muted) !important; }
 
     input, select, .product-selected-display, .textarea, button, .close-x {
-      background: rgba(15, 23, 42, 0.72);
+      background: var(--gem-input-bg);
       border-color: var(--gem-border);
       color: var(--gem-text);
       border-radius: 12px;
     }
-    input::placeholder, .textarea::placeholder { color: #8390b1; }
+    input::placeholder, .textarea::placeholder { color: var(--gem-muted); }
     button:hover, .close-x:hover {
-      background: rgba(139, 156, 255, 0.16);
+      background: var(--gem-nav-hover-bg);
       border-color: var(--gem-border-strong);
     }
 
     #openDataModalBtn, #loadDataBtn, #openDailyDataModalBtn, #loadDailyDataBtn, #addCompareConditionBtn {
-      background: linear-gradient(135deg, #7c88ff, #67e8f9);
+      background: linear-gradient(135deg, var(--gem-accent-a), var(--gem-accent-b));
       border-color: transparent;
       color: #061126;
       font-weight: 700;
@@ -676,35 +702,36 @@
     }
 
     .chip {
-      background: rgba(30, 41, 59, 0.62);
+      background: var(--gem-input-bg);
       border-color: var(--gem-border);
       color: var(--gem-muted);
       border-radius: 999px;
     }
-    .chip:hover { background: rgba(99, 102, 241, 0.2); color: #dbe8ff; }
+    .chip:hover { background: var(--gem-nav-hover-bg); color: var(--gem-text); }
     .chip.active {
       background: rgba(139, 156, 255, 0.24);
       border-color: var(--gem-border-strong);
-      color: #f8fbff;
+      color: var(--gem-text);
     }
 
     .table-wrap { border-radius: 16px; }
     thead th {
-      background: rgba(15, 23, 42, 0.95);
-      color: #c4d0ef;
+      background: var(--gem-card);
+      color: var(--gem-muted);
       border-bottom-color: var(--gem-border);
     }
-    tbody td { border-bottom-color: rgba(148, 163, 184, 0.2); color: #f2f6ff; }
-    tbody tr:hover td { background: rgba(99, 102, 241, 0.08) !important; }
+    tbody td { border-bottom-color: var(--gem-border); color: var(--gem-text); }
+    tbody tr:hover td { background: var(--gem-row-hover) !important; }
     .module-a td, .module-b td { background: transparent; }
-    .totals-value { color: #ffffff !important; }
-    .btn-link { color: #9fb0ff; }
-    .btn-link:hover { color: #d8e0ff; }
-    .headerSort .sortArrow, .dailyHeaderSort .sortArrow, .peopleHeaderSort .sortArrow, .accountHeaderSort .sortArrow, .videoHeaderSort .sortArrow { color: #64739b; }
-    .headerSort.active .sortArrow, .dailyHeaderSort.active .sortArrow, .peopleHeaderSort.active .sortArrow, .accountHeaderSort.active .sortArrow, .videoHeaderSort.active .sortArrow { color: #a5b4fc; }
+    .totals-value { color: var(--gem-text) !important; }
+    .btn-link { color: var(--gem-link); }
+    .btn-link:hover { filter: brightness(1.1); }
+    .headerSort .sortArrow, .dailyHeaderSort .sortArrow, .peopleHeaderSort .sortArrow, .accountHeaderSort .sortArrow, .videoHeaderSort .sortArrow { color: var(--gem-muted); }
+    .headerSort.active .sortArrow, .dailyHeaderSort.active .sortArrow, .peopleHeaderSort.active .sortArrow, .accountHeaderSort.active .sortArrow, .videoHeaderSort.active .sortArrow { color: var(--gem-link); }
 
-    .sep { background: rgba(148, 163, 184, 0.2); }
-    .modal-overlay { background: rgba(2, 6, 23, 0.68); }
+    .sep { background: var(--gem-border); }
+    .modal-overlay { background: rgba(2, 6, 23, 0.45); }
+    body.dktt-dark .modal-overlay { background: rgba(2, 6, 23, 0.68); }
   </style>
 </head>
 <body>
@@ -3450,8 +3477,8 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\té
 
     // Init
     (async function init() {
-      let savedTheme = 'dark';
-      try { savedTheme = localStorage.getItem('dktt-theme') || 'dark'; } catch (_) {}
+      let savedTheme = 'light';
+      try { savedTheme = localStorage.getItem('dktt-theme') || 'light'; } catch (_) {}
       applyTheme(savedTheme === 'dark' ? 'dark' : 'light');
       dataInputEl.value = DEFAULT_TSV_TEMPLATE;
       initHeaderSorting();
