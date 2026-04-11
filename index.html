@@ -581,6 +581,130 @@
     body.dktt-dark ::-webkit-scrollbar { width: 8px; height: 8px; }
     body.dktt-dark ::-webkit-scrollbar-thumb { background: #343434; border-radius: 999px; }
     body.dktt-dark ::-webkit-scrollbar-track { background: #111; }
+
+    /* ===== Gemini-inspired visual skin (style-only override) ===== */
+    :root {
+      --gem-bg: radial-gradient(1200px 500px at 75% -20%, rgba(122, 128, 255, 0.22), transparent 60%),
+                radial-gradient(800px 480px at -5% 0%, rgba(73, 193, 255, 0.15), transparent 58%),
+                #0b1020;
+      --gem-card: rgba(17, 24, 39, 0.86);
+      --gem-card-soft: rgba(30, 41, 59, 0.62);
+      --gem-border: rgba(148, 163, 184, 0.24);
+      --gem-border-strong: rgba(165, 180, 252, 0.5);
+      --gem-text: #e5ecff;
+      --gem-muted: #9ca8c7;
+      --gem-accent: #8b9cff;
+      --gem-accent-2: #67e8f9;
+    }
+
+    body {
+      margin: 0;
+      padding: 14px;
+      background: var(--gem-bg);
+      color: var(--gem-text);
+      font-family: "Inter", "Segoe UI", "PingFang SC", "Noto Sans SC", Arial, sans-serif;
+    }
+
+    .app-layout { gap: 16px; }
+    .left-nav {
+      background: var(--gem-card-soft);
+      border-color: var(--gem-border);
+      border-radius: 18px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 14px 30px rgba(3, 7, 18, 0.35);
+      backdrop-filter: blur(14px);
+    }
+    .left-brand { border-bottom-color: var(--gem-border); }
+    .left-brand-text { color: var(--gem-text); letter-spacing: 0.35px; }
+    .left-nav-title { color: var(--gem-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .nav-btn {
+      border-color: transparent;
+      background: transparent;
+      color: var(--gem-muted);
+      border-radius: 12px;
+      transition: all 0.2s ease;
+    }
+    .nav-btn:hover {
+      background: rgba(139, 156, 255, 0.12);
+      border-color: rgba(139, 156, 255, 0.35);
+      color: #eff4ff;
+    }
+    .nav-btn.active {
+      background: linear-gradient(135deg, rgba(139, 156, 255, 0.32), rgba(103, 232, 249, 0.2));
+      border-color: var(--gem-border-strong);
+      color: #ffffff;
+      box-shadow: 0 8px 20px rgba(76, 102, 255, 0.25);
+    }
+
+    .theme-toggle-btn {
+      background: rgba(148, 163, 184, 0.12);
+      border-color: var(--gem-border);
+      color: #fff;
+    }
+    .theme-toggle-btn:hover { background: rgba(139, 156, 255, 0.2); }
+
+    .daily-wrap, .blank-page, .chart-card, .table-wrap, .totals-grid, .detail-card, .popover, .modal, .compare-row {
+      background: var(--gem-card);
+      border-color: var(--gem-border);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 10px 26px rgba(2, 6, 23, 0.3);
+      backdrop-filter: blur(10px);
+    }
+    .blank-page { border-style: solid; }
+    .app-main h2, .chart-title, .modal-title { color: #f6f8ff; letter-spacing: 0.2px; }
+    .muted, .msg, label, .totals-label { color: var(--gem-muted) !important; }
+
+    input, select, .product-selected-display, .textarea, button, .close-x {
+      background: rgba(15, 23, 42, 0.72);
+      border-color: var(--gem-border);
+      color: var(--gem-text);
+      border-radius: 12px;
+    }
+    input::placeholder, .textarea::placeholder { color: #8390b1; }
+    button:hover, .close-x:hover {
+      background: rgba(139, 156, 255, 0.16);
+      border-color: var(--gem-border-strong);
+    }
+
+    #openDataModalBtn, #loadDataBtn, #openDailyDataModalBtn, #loadDailyDataBtn, #addCompareConditionBtn {
+      background: linear-gradient(135deg, #7c88ff, #67e8f9);
+      border-color: transparent;
+      color: #061126;
+      font-weight: 700;
+    }
+    #openDataModalBtn:hover, #loadDataBtn:hover, #openDailyDataModalBtn:hover, #loadDailyDataBtn:hover, #addCompareConditionBtn:hover {
+      filter: brightness(1.05);
+    }
+
+    .chip {
+      background: rgba(30, 41, 59, 0.62);
+      border-color: var(--gem-border);
+      color: var(--gem-muted);
+      border-radius: 999px;
+    }
+    .chip:hover { background: rgba(99, 102, 241, 0.2); color: #dbe8ff; }
+    .chip.active {
+      background: rgba(139, 156, 255, 0.24);
+      border-color: var(--gem-border-strong);
+      color: #f8fbff;
+    }
+
+    .table-wrap { border-radius: 16px; }
+    thead th {
+      background: rgba(15, 23, 42, 0.95);
+      color: #c4d0ef;
+      border-bottom-color: var(--gem-border);
+    }
+    tbody td { border-bottom-color: rgba(148, 163, 184, 0.2); color: #f2f6ff; }
+    tbody tr:hover td { background: rgba(99, 102, 241, 0.08) !important; }
+    .module-a td, .module-b td { background: transparent; }
+    .totals-value { color: #ffffff !important; }
+    .btn-link { color: #9fb0ff; }
+    .btn-link:hover { color: #d8e0ff; }
+    .headerSort .sortArrow, .dailyHeaderSort .sortArrow, .peopleHeaderSort .sortArrow, .accountHeaderSort .sortArrow, .videoHeaderSort .sortArrow { color: #64739b; }
+    .headerSort.active .sortArrow, .dailyHeaderSort.active .sortArrow, .peopleHeaderSort.active .sortArrow, .accountHeaderSort.active .sortArrow, .videoHeaderSort.active .sortArrow { color: #a5b4fc; }
+
+    .sep { background: rgba(148, 163, 184, 0.2); }
+    .modal-overlay { background: rgba(2, 6, 23, 0.68); }
   </style>
 </head>
 <body>
@@ -3326,8 +3450,8 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\té
 
     // Init
     (async function init() {
-      let savedTheme = 'light';
-      try { savedTheme = localStorage.getItem('dktt-theme') || 'light'; } catch (_) {}
+      let savedTheme = 'dark';
+      try { savedTheme = localStorage.getItem('dktt-theme') || 'dark'; } catch (_) {}
       applyTheme(savedTheme === 'dark' ? 'dark' : 'light');
       dataInputEl.value = DEFAULT_TSV_TEMPLATE;
       initHeaderSorting();
