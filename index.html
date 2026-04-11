@@ -772,8 +772,7 @@
       <label>快捷日期</label>
       <div class="chipbar" id="quickDateBar">
         <button type="button" class="chip active" data-quick-date="all">全部</button>
-        <button type="button" class="chip" data-quick-date="today">今天</button>
-        <button type="button" class="chip" data-quick-date="yesterday">昨天</button>
+        <button type="button" class="chip" data-quick-date="latest">最新数据</button>
         <button type="button" class="chip" data-quick-date="last7">过去一周</button>
         <button type="button" class="chip" data-quick-date="last30">过去一个月</button>
       </div>
@@ -884,8 +883,7 @@
             <label>快捷日期</label>
             <div class="chipbar" id="dailyQuickDateBar">
               <button type="button" class="chip active" data-daily-quick-date="all">全部</button>
-              <button type="button" class="chip" data-daily-quick-date="today">今天</button>
-              <button type="button" class="chip" data-daily-quick-date="yesterday">昨天</button>
+              <button type="button" class="chip" data-daily-quick-date="latest">最新数据</button>
               <button type="button" class="chip" data-daily-quick-date="last7">过去一周</button>
               <button type="button" class="chip" data-daily-quick-date="last30">过去一个月</button>
             </div>
@@ -976,8 +974,7 @@
             <label>快捷日期</label>
             <div class="chipbar" id="peopleQuickDateBar">
               <button type="button" class="chip active" data-people-quick-date="all">全部</button>
-              <button type="button" class="chip" data-people-quick-date="today">今天</button>
-              <button type="button" class="chip" data-people-quick-date="yesterday">昨天</button>
+              <button type="button" class="chip" data-people-quick-date="latest">最新数据</button>
               <button type="button" class="chip" data-people-quick-date="last7">过去一周</button>
               <button type="button" class="chip" data-people-quick-date="last30">过去一个月</button>
             </div>
@@ -1037,8 +1034,7 @@
             <label>快捷日期</label>
             <div class="chipbar" id="accountRankQuickDateBar">
               <button type="button" class="chip active" data-account-rank-quick-date="all">全部</button>
-              <button type="button" class="chip" data-account-rank-quick-date="today">今天</button>
-              <button type="button" class="chip" data-account-rank-quick-date="yesterday">昨天</button>
+              <button type="button" class="chip" data-account-rank-quick-date="latest">最新数据</button>
               <button type="button" class="chip" data-account-rank-quick-date="last7">过去一周</button>
               <button type="button" class="chip" data-account-rank-quick-date="last30">过去一个月</button>
             </div>
@@ -1079,8 +1075,7 @@
             <label>快捷日期</label>
             <div class="chipbar" id="videoRankQuickDateBar">
               <button type="button" class="chip active" data-video-rank-quick-date="all">全部</button>
-              <button type="button" class="chip" data-video-rank-quick-date="today">今天</button>
-              <button type="button" class="chip" data-video-rank-quick-date="yesterday">昨天</button>
+              <button type="button" class="chip" data-video-rank-quick-date="latest">最新数据</button>
               <button type="button" class="chip" data-video-rank-quick-date="last7">过去一周</button>
               <button type="button" class="chip" data-video-rank-quick-date="last30">过去一个月</button>
             </div>
@@ -1951,14 +1946,12 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
       }
 
       let start, end;
-      if (key === 'today') {
-        start = startOfDay(now);
-        end = endOfDay(now);
-      } else if (key === 'yesterday') {
-        const y = new Date(now);
-        y.setDate(y.getDate() - 1);
-        start = startOfDay(y);
-        end = endOfDay(y);
+      if (key === 'latest') {
+        const latestTs = Math.max(...rows.map(r => r.dateObj && r.dateObj.getTime()).filter(n => Number.isFinite(n)));
+        if (!Number.isFinite(latestTs)) return;
+        const latest = new Date(latestTs);
+        start = startOfDay(latest);
+        end = endOfDay(latest);
       } else if (key === 'last7') {
         end = endOfDay(now);
         const s = new Date(now);
@@ -2054,13 +2047,12 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
         return;
       }
       let start, end;
-      if (key === 'today') {
-        start = new Date(now); start.setHours(0,0,0,0);
-        end = new Date(now); end.setHours(23,59,59,999);
-      } else if (key === 'yesterday') {
-        const y = new Date(now); y.setDate(y.getDate() - 1);
-        start = new Date(y); start.setHours(0,0,0,0);
-        end = new Date(y); end.setHours(23,59,59,999);
+      if (key === 'latest') {
+        const latestTs = Math.max(...dailyRows.map(r => r.dateObj && r.dateObj.getTime()).filter(n => Number.isFinite(n)));
+        if (!Number.isFinite(latestTs)) return;
+        const latest = new Date(latestTs);
+        start = new Date(latest); start.setHours(0,0,0,0);
+        end = new Date(latest); end.setHours(23,59,59,999);
       } else if (key === 'last7') {
         end = new Date(now); end.setHours(23,59,59,999);
         start = new Date(now); start.setDate(start.getDate() - 6); start.setHours(0,0,0,0);
@@ -2562,11 +2554,13 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       let start = null;
       let end = null;
-      if (key === 'today') {
-        start = new Date(today); end = new Date(today);
-      } else if (key === 'yesterday') {
-        start = new Date(today); start.setDate(start.getDate() - 1);
-        end = new Date(start);
+      if (key === 'latest') {
+        const latestTs = Math.max(...dailyRows.map(r => r.dateObj && r.dateObj.getTime()).filter(n => Number.isFinite(n)));
+        if (Number.isFinite(latestTs)) {
+          const latest = new Date(latestTs);
+          start = new Date(latest);
+          end = new Date(latest);
+        }
       } else if (key === 'last7') {
         end = new Date(today);
         start = new Date(today); start.setDate(start.getDate() - 6);
@@ -2839,8 +2833,14 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       let start = null;
       let end = null;
-      if (key === 'today') { start = new Date(today); end = new Date(today); }
-      else if (key === 'yesterday') { start = new Date(today); start.setDate(start.getDate() - 1); end = new Date(start); }
+      if (key === 'latest') {
+        const latestTs = Math.max(...dailyRows.map(r => r.dateObj && r.dateObj.getTime()).filter(n => Number.isFinite(n)));
+        if (Number.isFinite(latestTs)) {
+          const latest = new Date(latestTs);
+          start = new Date(latest);
+          end = new Date(latest);
+        }
+      }
       else if (key === 'last7') { end = new Date(today); start = new Date(today); start.setDate(start.getDate() - 6); }
       else if (key === 'last30') { end = new Date(today); start = new Date(today); start.setDate(start.getDate() - 29); }
       startEl.value = start ? toDateInputValue(start) : '';
