@@ -26,11 +26,14 @@
       --ln-row-b: #18181A;
       --ln-row-hover: #1F1F22;
       --ln-row-detail: #1E1E21;
-      --ln-table-line: rgba(255, 255, 255, 0.07);
+      --ln-table-line: #262626;
       --ln-table-head: rgba(142, 142, 147, 0.92);
       --ln-table-hover: rgba(255, 255, 255, 0.045);
       --ln-icon: rgba(142, 142, 147, 0.88);
       --ln-icon-muted: rgba(110, 110, 115, 0.9);
+      /* 文内链接：深色底上保持明显可点的中蓝 */
+      --ln-link: #4493F8;
+      --ln-link-hover: #6BB3FF;
       /* 深度：大投影改为内描边 + 顶缘微高光（Linear 质感） */
       --ln-inset-ring: inset 0 0 0 1px rgba(255, 255, 255, 0.09);
       --ln-inset-top: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
@@ -49,16 +52,29 @@
       --ln-row-b: #FAFAFA;
       --ln-row-hover: #F4F4F5;
       --ln-row-detail: #F0F0F2;
-      --ln-table-line: rgba(24, 24, 27, 0.09);
+      --ln-table-line: #262626;
       --ln-table-head: rgba(113, 113, 122, 0.95);
       --ln-table-hover: rgba(0, 0, 0, 0.04);
       --ln-icon: rgba(113, 113, 122, 0.92);
       --ln-icon-muted: rgba(113, 113, 122, 0.75);
       --ln-inset-ring: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
       --ln-inset-top: inset 0 1px 0 0 rgba(255, 255, 255, 0.65);
+      /* 浅色背景：中深蓝易辨认，悬停略提亮 + 下划线（见 .btn-link:hover） */
+      --ln-link: #0969DA;
+      --ln-link-hover: #1A73E8;
     }
 
     *, *::before, *::after { box-sizing: border-box; }
+
+    /* Prevent horizontal layout shift when pages toggle vertical overflow */
+    html {
+      scrollbar-gutter: stable;
+    }
+    @supports not (scrollbar-gutter: stable) {
+      html {
+        overflow-y: scroll;
+      }
+    }
 
     /* Lucide：统一线宽与柔和颜色（非 React 项目使用 UMD + data-lucide） */
     svg.lucide {
@@ -108,6 +124,31 @@
       justify-content: space-between;
       gap: 12px 20px;
       margin: 0;
+    }
+    /* Shared filter component: keep all pages pixel-consistent */
+    .filter-toolbar-component {
+      width: 100%;
+      display: grid;
+      grid-template-columns: minmax(220px, max-content) minmax(0, 1fr);
+      align-items: end;
+      column-gap: 20px;
+      row-gap: 12px;
+    }
+    .filter-toolbar-component .field--chipbar-left {
+      min-width: 220px;
+      max-width: 100%;
+    }
+    .filter-toolbar-component .page-inline-filters {
+      width: 100%;
+      justify-content: flex-end;
+    }
+    @media (max-width: 1220px) {
+      .filter-toolbar-component {
+        grid-template-columns: 1fr;
+      }
+      .filter-toolbar-component .page-inline-filters {
+        justify-content: flex-start;
+      }
     }
     .page-toolbar-filters-row .field--chipbar-left {
       flex: 0 1 auto;
@@ -224,10 +265,10 @@
     /* Linear 风格数据表：细横线、无纵线、小表头、首列留白、行悬停提亮（全站 .table-wrap 统一） */
     .table-wrap {
       overflow: auto;
-      border: 1px solid var(--ln-table-line);
-      border-radius: var(--ln-radius);
-      background: var(--ln-surface);
-      box-shadow: var(--ln-inset-top), var(--ln-inset-ring);
+      border: none;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
     }
     .table-wrap > table {
       border-collapse: collapse;
@@ -242,12 +283,12 @@
     .table-wrap th,
     .table-wrap td {
       height: 48px;
-      padding: 0 12px;
+      padding: 12px 16px;
       box-sizing: border-box;
       border-left: none;
       border-right: none;
       border-top: none;
-      border-bottom: 1px solid var(--ln-table-line);
+      border-bottom: 1px solid #262626;
       vertical-align: middle;
       line-height: 1.35;
     }
@@ -255,10 +296,10 @@
       position: sticky;
       top: 0;
       z-index: 10;
-      background: var(--ln-surface);
+      background: transparent;
       color: var(--ln-table-head);
       font-weight: 600;
-      font-size: 11px;
+      font-size: 12px;
       letter-spacing: 0.02em;
       text-align: left;
     }
@@ -271,6 +312,10 @@
       font-variant-numeric: tabular-nums;
       font-feature-settings: "tnum" 1;
     }
+    th.col-action, td.col-action { text-align: center; }
+    .table-wrap th.col-text { width: auto; }
+    .table-wrap th.col-num { width: 120px; }
+    .table-wrap th.col-action { width: 88px; }
     th.col-num .th-inner,
     th.col-text .th-inner {
       display: inline-flex;
@@ -280,10 +325,6 @@
     }
     th.col-num .th-inner { justify-content: flex-end; }
     th.col-text .th-inner { justify-content: flex-start; }
-    .table-wrap thead th:first-child,
-    .table-wrap tbody td:first-child {
-      padding-left: 16px;
-    }
     .table-wrap tbody tr:nth-child(odd) td,
     .table-wrap tbody tr:nth-child(even) td {
       background: var(--ln-surface) !important;
@@ -322,11 +363,37 @@
     .muted { color: var(--ln-text-secondary); font-size: 12px; }
     .right { text-align: right; }
     .btn-link {
-      border: none; background: transparent; padding: 0; color: #A8B0FF; cursor: pointer; text-decoration: none;
+      border: none;
+      background: transparent;
+      padding: 0;
+      color: var(--ln-link);
+      cursor: pointer;
+      text-decoration: none;
       font-size: 13px;
       font-weight: 500;
+      box-shadow: none;
     }
-    .btn-link:hover { color: #C4C8FF; text-decoration: underline; }
+    .btn-link:hover {
+      color: var(--ln-link-hover);
+      text-decoration: underline;
+      background: transparent;
+      border-color: transparent;
+      box-shadow: none;
+    }
+    .btn-link:focus-visible {
+      outline: 2px solid var(--ln-link);
+      outline-offset: 2px;
+      border-radius: 2px;
+    }
+    .app-main a:not([class]) {
+      color: var(--ln-link);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .app-main a:not([class]):hover {
+      color: var(--ln-link-hover);
+      text-decoration: underline;
+    }
 
     .detail-card {
       padding: 14px;
@@ -400,6 +467,13 @@
       gap: 20px;
       align-items: center;
       justify-content: flex-start;
+    }
+    #peoplePage .product-cell-inner,
+    #accountRankPage .product-cell-inner {
+      width: auto;
+      max-width: 100%;
+      min-width: 0;
+      margin: 0;
     }
 
     /* Totals row (between filters and table header) */
@@ -578,23 +652,23 @@
     .headerSort .th-inner { gap: 6px; }
     .headerSort .sortArrow { display: inline-block; width: 18px; text-align: center; color: var(--ln-table-head); opacity: 0.75; font-weight: 500; }
     .headerSort.active { background: transparent; }
-    .headerSort.active .sortArrow { color: var(--ln-accent); opacity: 1; }
+    .headerSort.active .sortArrow { color: var(--ln-link); opacity: 1; }
     .dailyHeaderSort { cursor: pointer; user-select: none; white-space: nowrap; }
     .dailyHeaderSort .th-inner { gap: 6px; }
     .dailyHeaderSort .sortArrow { display: inline-block; width: 16px; text-align: center; color: var(--ln-table-head); opacity: 0.75; font-weight: 500; }
-    .dailyHeaderSort.active .sortArrow { color: var(--ln-accent); opacity: 1; }
+    .dailyHeaderSort.active .sortArrow { color: var(--ln-link); opacity: 1; }
     .peopleHeaderSort { cursor: pointer; user-select: none; white-space: nowrap; }
     .peopleHeaderSort .th-inner { gap: 6px; }
     .peopleHeaderSort .sortArrow { display: inline-block; width: 16px; text-align: center; color: var(--ln-table-head); opacity: 0.75; font-weight: 500; }
-    .peopleHeaderSort.active .sortArrow { color: var(--ln-accent); opacity: 1; }
+    .peopleHeaderSort.active .sortArrow { color: var(--ln-link); opacity: 1; }
     .accountHeaderSort { cursor: pointer; user-select: none; white-space: nowrap; }
     .accountHeaderSort .th-inner { gap: 6px; }
     .accountHeaderSort .sortArrow { display: inline-block; width: 16px; text-align: center; color: var(--ln-table-head); opacity: 0.75; font-weight: 500; }
-    .accountHeaderSort.active .sortArrow { color: var(--ln-accent); opacity: 1; }
+    .accountHeaderSort.active .sortArrow { color: var(--ln-link); opacity: 1; }
     .videoHeaderSort { cursor: pointer; user-select: none; white-space: nowrap; }
     .videoHeaderSort .th-inner { gap: 6px; }
     .videoHeaderSort .sortArrow { display: inline-block; width: 16px; text-align: center; color: var(--ln-table-head); opacity: 0.75; font-weight: 500; }
-    .videoHeaderSort.active .sortArrow { color: var(--ln-accent); opacity: 1; }
+    .videoHeaderSort.active .sortArrow { color: var(--ln-link); opacity: 1; }
 
     /* Modal (must be above sticky header) */
     .modal-overlay {
@@ -782,9 +856,27 @@
       letter-spacing: -0.02em;
     }
     .daily-expand-btn {
-      padding: 4px 10px;
+      padding: 2px 6px;
       font-size: 12px;
+      font-weight: 500;
+      line-height: 1.35;
+      border: none;
+      background: transparent;
+      color: var(--ln-link);
+      cursor: pointer;
       border-radius: var(--ln-radius);
+      box-shadow: none;
+    }
+    .daily-expand-btn:hover {
+      color: var(--ln-link-hover);
+      text-decoration: underline;
+      background: transparent !important;
+      border-color: transparent !important;
+      box-shadow: none !important;
+    }
+    .daily-expand-btn:focus-visible {
+      outline: 2px solid var(--ln-link);
+      outline-offset: 2px;
     }
     .daily-subrow .sub-wrap {
       padding: 12px 14px;
@@ -882,7 +974,7 @@
           <div class="page-title-row">
             <h2>产品排行</h2>
           </div>
-          <div class="page-filter-row page-toolbar-filters-row">
+          <div class="page-filter-row page-toolbar-filters-row filter-toolbar-component">
             <div class="field field--toolbar field--chipbar-left">
               <label>快捷日期</label>
               <div class="chipbar" id="quickDateBar">
@@ -982,7 +1074,7 @@
           <div class="page-title-row">
             <h2>每日数据</h2>
           </div>
-          <div class="page-filter-row page-toolbar-filters-row">
+          <div class="page-filter-row page-toolbar-filters-row filter-toolbar-component">
             <div class="field field--toolbar field--chipbar-left">
               <label>快捷日期</label>
               <div class="chipbar" id="dailyQuickDateBar">
@@ -1080,7 +1172,7 @@
           <div class="page-title-row">
             <h2>人员排行</h2>
           </div>
-          <div class="page-filter-row page-toolbar-filters-row">
+          <div class="page-filter-row page-toolbar-filters-row filter-toolbar-component">
             <div class="field field--toolbar field--chipbar-left">
               <label>快捷日期</label>
               <div class="chipbar" id="peopleQuickDateBar">
@@ -1127,7 +1219,7 @@
           <table>
             <thead>
               <tr>
-                <th class="col-text" style="width: 170px;">人员（拍剪员）</th>
+                <th class="col-text" style="width: 260px;">人员（拍剪员）</th>
                 <th class="peopleHeaderSort col-num" data-people-sort="gmv" style="width: 130px;"><span class="th-inner">GMV <span class="sortArrow">↕</span></span></th>
                 <th class="peopleHeaderSort col-num" data-people-sort="orders" style="width: 120px;"><span class="th-inner">出单数量 <span class="sortArrow">↕</span></span></th>
                 <th class="peopleHeaderSort col-num" data-people-sort="commission" style="width: 120px;"><span class="th-inner">佣金 <span class="sortArrow">↕</span></span></th>
@@ -1135,7 +1227,6 @@
                 <th class="peopleHeaderSort col-num" data-people-sort="gmvCny" style="width: 130px;"><span class="th-inner">GMV人民币 <span class="sortArrow">↕</span></span></th>
                 <th class="peopleHeaderSort col-num" data-people-sort="commissionCny" style="width: 130px;"><span class="th-inner">佣金人民币 <span class="sortArrow">↕</span></span></th>
                 <th class="col-text" style="width: 150px;">前10视频</th>
-                <th class="col-text" style="width: 150px;">产品贡献</th>
               </tr>
             </thead>
             <tbody id="peopleTbody"></tbody>
@@ -1148,7 +1239,7 @@
           <div class="page-title-row">
             <h2>账号排行</h2>
           </div>
-          <div class="page-filter-row page-toolbar-filters-row">
+          <div class="page-filter-row page-toolbar-filters-row filter-toolbar-component">
             <div class="field field--toolbar field--chipbar-left">
               <label>快捷日期</label>
               <div class="chipbar" id="accountRankQuickDateBar">
@@ -1194,7 +1285,7 @@
           <table>
             <thead>
               <tr>
-                <th class="col-text" style="width: 170px;">账号</th>
+                <th class="col-text" style="width: 260px;">账号</th>
                 <th class="accountHeaderSort col-num" data-account-sort="gmv" style="width: 130px;"><span class="th-inner">GMV <span class="sortArrow">↕</span></span></th>
                 <th class="accountHeaderSort col-num" data-account-sort="orders" style="width: 120px;"><span class="th-inner">出单数量 <span class="sortArrow">↕</span></span></th>
                 <th class="accountHeaderSort col-num" data-account-sort="commission" style="width: 120px;"><span class="th-inner">佣金 <span class="sortArrow">↕</span></span></th>
@@ -1202,7 +1293,6 @@
                 <th class="accountHeaderSort col-num" data-account-sort="gmvCny" style="width: 130px;"><span class="th-inner">GMV人民币 <span class="sortArrow">↕</span></span></th>
                 <th class="accountHeaderSort col-num" data-account-sort="commissionCny" style="width: 130px;"><span class="th-inner">佣金人民币 <span class="sortArrow">↕</span></span></th>
                 <th class="col-text" style="width: 150px;">前10视频</th>
-                <th class="col-text" style="width: 150px;">产品贡献</th>
               </tr>
             </thead>
             <tbody id="accountRankTbody"></tbody>
@@ -1215,7 +1305,7 @@
           <div class="page-title-row">
             <h2>视频排行</h2>
           </div>
-          <div class="page-filter-row page-toolbar-filters-row">
+          <div class="page-filter-row page-toolbar-filters-row filter-toolbar-component">
             <div class="field field--toolbar field--chipbar-left">
               <label>快捷日期</label>
               <div class="chipbar" id="videoRankQuickDateBar">
@@ -1326,7 +1416,7 @@
             <thead>
               <tr>
                 <th class="col-num" style="width: 48px;">Rank</th>
-                <th class="col-text" style="width: 150px;">Video</th>
+                <th class="col-text" style="width: 220px;">视频链接</th>
                 <th class="col-text" style="width: 90px;">发布日期</th>
                 <th class="col-text" style="width: 95px;">产品</th>
                 <th class="col-text" style="width: 90px;">拍摄员</th>
@@ -1459,6 +1549,14 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
         .replaceAll('>', '&gt;')
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#039;');
+    }
+
+    /** 视频链接列：产品-账号-人员（日数据用 editor，产品累计数据用 owner） */
+    function formatVideoLinkTriple(r) {
+      const person = (r.editor != null && String(r.editor).trim() !== '')
+        ? r.editor
+        : ((r.owner != null && String(r.owner).trim() !== '') ? r.owner : '未知拍剪员');
+      return `${r.product || '未知产品'}-${r.account || '未知账号'}-${person}`;
     }
 
     function parseTSV(tsv) {
@@ -1935,13 +2033,14 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
 
       top10Tbody.innerHTML = '';
       sorted.forEach((r, i) => {
+        const linkText = formatVideoLinkTriple(r);
+        const videoCell = r.videoUrl
+          ? `<a href="${escapeHtml(r.videoUrl)}" target="_blank" rel="noreferrer" class="btn-link" style="text-decoration:none;">${escapeHtml(linkText)}</a>`
+          : `<span class="muted">${escapeHtml(linkText)}</span>`;
         top10Tbody.innerHTML += `
           <tr>
             <td class="col-num"><span class="modalNum">${i + 1}</span></td>
-            <td class="col-text">
-              <div style="font-weight:600; margin-bottom:4px;">${escapeHtml(r.script || 'Video')}</div>
-              <a href="${escapeHtml(r.videoUrl)}" target="_blank" rel="noreferrer" class="btn-link" style="text-decoration:none;">Open link</a>
-            </td>
+            <td class="col-text">${videoCell}</td>
             <td class="col-text">${escapeHtml(r.dateStr)}</td>
             <td class="col-text">${escapeHtml(r.product)}</td>
             <td class="col-text">${escapeHtml(r.owner || 'Unknown')}</td>
@@ -2730,7 +2829,7 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
         ? `人员: ${editor} · 产品: ${product} · 排序: 出单数量降序`
         : `人员: ${editor} · 排序: 出单数量降序`;
       peopleTop10TbodyEl.innerHTML = topRows.map((r, i) => {
-        const text = `${r.product || '未知产品'}-${r.account || '未知账号'}-${r.editor || '未知拍剪员'}`;
+        const text = formatVideoLinkTriple(r);
         const linkHtml = r.videoUrl
           ? `<a href="${escapeHtml(r.videoUrl)}" target="_blank" rel="noreferrer" class="btn-link" style="text-decoration:none;">${escapeHtml(text)}</a>`
           : `<span class="muted">${escapeHtml(text)}</span>`;
@@ -2773,7 +2872,14 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
         const isExpanded = peopleExpandedEditors.has(p.editor);
         html.push(`
           <tr>
-            <td class="col-text">${escapeHtml(p.editor)}</td>
+            <td class="col-text">
+              <div class="product-cell-inner">
+                <button type="button" class="expandBtn" data-people-expand="${editorKey}" style="min-width: 90px;">${isExpanded ? 'Collapse' : 'Expand'}</button>
+                <div>
+                  <div style="font-weight:700;">${escapeHtml(p.editor)}</div>
+                </div>
+              </div>
+            </td>
             <td class="col-num"><span class="numWrap">${formatUsd(p.gmv)}</span></td>
             <td class="col-num"><span class="numWrap">${formatNumber(p.orders)}</span></td>
             <td class="col-num"><span class="numWrap">${formatUsd(p.commission)}</span></td>
@@ -2781,7 +2887,6 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
             <td class="col-num"><span class="numWrap">${formatCurrency(p.gmvCny)}</span></td>
             <td class="col-num"><span class="numWrap">${formatCurrency(p.commissionCny)}</span></td>
             <td class="col-text"><button type="button" class="btn-link peopleTop10Btn" data-editor="${editorKey}">前10视频</button></td>
-            <td class="col-text"><button type="button" class="btn-link peopleExpandBtn" data-editor="${editorKey}">${isExpanded ? '收起' : '展开'}产品贡献</button></td>
           </tr>
         `);
 
@@ -2813,7 +2918,7 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
           `).join('');
           html.push(`
             <tr class="daily-subrow">
-              <td colspan="9">
+              <td colspan="8">
                 <div class="sub-wrap">
                   <div style="font-weight:700; margin-bottom:8px; text-align:left;">${escapeHtml(p.editor)} 的产品贡献</div>
                   <div class="table-wrap">
@@ -2839,11 +2944,11 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
           `);
         }
       }
-      peopleTbodyEl.innerHTML = html.join('') || '<tr><td colspan="9" class="muted col-text">无数据</td></tr>';
+      peopleTbodyEl.innerHTML = html.join('') || '<tr><td colspan="8" class="muted col-text">无数据</td></tr>';
 
-      peopleTbodyEl.querySelectorAll('.peopleExpandBtn').forEach(btn => {
+      peopleTbodyEl.querySelectorAll('.expandBtn[data-people-expand]').forEach(btn => {
         btn.addEventListener('click', () => {
-          const editor = decodeURIComponent(btn.getAttribute('data-editor') || '');
+          const editor = decodeURIComponent(btn.getAttribute('data-people-expand') || '');
           if (!editor) return;
           if (peopleExpandedEditors.has(editor)) peopleExpandedEditors.delete(editor);
           else peopleExpandedEditors.add(editor);
@@ -3027,7 +3132,7 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
       peopleTop10ModalTitleEl.textContent = product ? '产品前10视频' : '前10视频';
       peopleTop10ModalSubTitleEl.textContent = product ? `主体: ${value} · 产品: ${product}` : `主体: ${value}`;
       peopleTop10TbodyEl.innerHTML = topRows.map((r, i) => {
-        const text = `${r.product || '未知产品'}-${r.account || '未知账号'}-${r.editor || '未知拍剪员'}`;
+        const text = formatVideoLinkTriple(r);
         const linkHtml = r.videoUrl
           ? `<a href="${escapeHtml(r.videoUrl)}" target="_blank" rel="noreferrer" class="btn-link" style="text-decoration:none;">${escapeHtml(text)}</a>`
           : `<span class="muted">${escapeHtml(text)}</span>`;
@@ -3058,7 +3163,14 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
         const key = encodeURIComponent(x.account);
         const ex = accountRankExpanded.has(x.account);
         html.push(`<tr>
-          <td class="col-text">${escapeHtml(x.account)}</td>
+          <td class="col-text">
+            <div class="product-cell-inner">
+              <button type="button" class="expandBtn" data-account-expand="${key}" style="min-width: 90px;">${ex ? 'Collapse' : 'Expand'}</button>
+              <div>
+                <div style="font-weight:700;">${escapeHtml(x.account)}</div>
+              </div>
+            </div>
+          </td>
           <td class="col-num"><span class="numWrap">${formatUsd(x.gmv)}</span></td>
           <td class="col-num"><span class="numWrap">${formatNumber(x.orders)}</span></td>
           <td class="col-num"><span class="numWrap">${formatUsd(x.commission)}</span></td>
@@ -3066,7 +3178,6 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
           <td class="col-num"><span class="numWrap">${formatCurrency(x.gmvCny)}</span></td>
           <td class="col-num"><span class="numWrap">${formatCurrency(x.commissionCny)}</span></td>
           <td class="col-text"><button type="button" class="btn-link accountTop10Btn" data-account="${key}">前10视频</button></td>
-          <td class="col-text"><button type="button" class="btn-link accountExpandBtn" data-account="${key}">${ex ? '收起' : '展开'}产品贡献</button></td>
         </tr>`);
         if (ex) {
           const pmap = new Map();
@@ -3082,14 +3193,14 @@ https://www.tiktok.com/@rawrollhisstyle/video/7576579232990579998\t2025/12/25\t�
             <td class="col-num"><span class="numWrap">${formatUsd(pr.commissionGmv)}</span></td><td class="col-num"><span class="numWrap">${formatCurrency(pr.gmvCny)}</span></td>
             <td class="col-num"><span class="numWrap">${formatCurrency(pr.commissionCny)}</span></td>
             <td class="col-text"><button type="button" class="btn-link accountProductTop10Btn" data-account="${key}" data-product="${encodeURIComponent(pr.product)}">产品前10视频</button></td></tr>`).join('');
-          html.push(`<tr class="daily-subrow"><td colspan="9"><div class="sub-wrap"><div style="font-weight:600; margin-bottom:8px; text-align:left;">${escapeHtml(x.account)} 的产品贡献</div><div class="table-wrap"><table class="ln-subtable"><thead><tr>
+          html.push(`<tr class="daily-subrow"><td colspan="8"><div class="sub-wrap"><div style="font-weight:600; margin-bottom:8px; text-align:left;">${escapeHtml(x.account)} 的产品贡献</div><div class="table-wrap"><table class="ln-subtable"><thead><tr>
             <th class="col-text">产品</th><th class="col-num">GMV</th><th class="col-num">出单数量</th><th class="col-num">佣金</th><th class="col-num">佣金GMV</th><th class="col-num">GMV人民币</th><th class="col-num">佣金人民币</th><th class="col-text">前10视频</th>
           </tr></thead><tbody>${sub || '<tr><td colspan="8" class="muted col-text">无数据</td></tr>'}</tbody></table></div></div></td></tr>`);
         }
       }
-      accountRankTbodyEl.innerHTML = html.join('') || '<tr><td colspan="9" class="muted col-text">无数据</td></tr>';
-      accountRankTbodyEl.querySelectorAll('.accountExpandBtn').forEach(btn => btn.addEventListener('click', () => {
-        const key = decodeURIComponent(btn.getAttribute('data-account') || ''); if (!key) return;
+      accountRankTbodyEl.innerHTML = html.join('') || '<tr><td colspan="8" class="muted col-text">无数据</td></tr>';
+      accountRankTbodyEl.querySelectorAll('.expandBtn[data-account-expand]').forEach(btn => btn.addEventListener('click', () => {
+        const key = decodeURIComponent(btn.getAttribute('data-account-expand') || ''); if (!key) return;
         if (accountRankExpanded.has(key)) accountRankExpanded.delete(key); else accountRankExpanded.add(key);
         renderAccountRanking();
       }));
